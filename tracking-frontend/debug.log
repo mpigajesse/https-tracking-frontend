@@ -1,0 +1,45 @@
+2026-02-18T12:51:33.168Z [console][error] Failed to fetch RSC payload for https://3000-7b0750f7-7915-4a31-aa9a-df4a02dcca44.orchids.cloud/mon-qr. Falling back to browser navigation. {}
+2026-02-18T12:51:33.168Z [console][error] Failed to fetch RSC payload for https://3000-7b0750f7-7915-4a31-aa9a-df4a02dcca44.orchids.cloud/mon-qr. Falling back to browser navigation. {}
+2026-02-18T12:52:25.218Z [console][error] Failed to fetch RSC payload for https://3000-7b0750f7-7915-4a31-aa9a-df4a02dcca44.orchids.cloud/alertes. Falling back to browser navigation. {}
+2026-02-18T12:52:53.969Z [console][error] Failed to fetch RSC payload for https://3000-7b0750f7-7915-4a31-aa9a-df4a02dcca44.orchids.cloud/login. Falling back to browser navigation. {}
+2026-02-18T12:53:19.955Z [console][error] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload assetPrefix="" globalError={[...]}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/user/app/...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html data-orchids-id="src/app/la..." data-orchids-name="html" lang="fr" ...>
+                          <body
+                            data-orchids-id="src/app/layout.tsx:26:6"
+                            data-orchids-name="body"
+                            className="inter_b785138-module__Hrlnpq__variable antialiased"
+-                           __processed_05ecc452-e788-44fe-a143-d202313c2902__="true"
+                          >
+                  ...
+
+2026-02-18T12:56:08.301Z [console][error] Failed to fetch RSC payload for https://3000-7b0750f7-7915-4a31-aa9a-df4a02dcca44.orchids.cloud/validation. Falling back to browser navigation. {}
+2026-02-18T12:56:15.662Z [console][error] Failed to fetch RSC payload for https://3000-7b0750f7-7915-4a31-aa9a-df4a02dcca44.orchids.cloud/utilisateurs. Falling back to browser navigation. {}
