@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
-import { Eye, EyeOff, AlertCircle, Building2, Users, Shield } from 'lucide-react';
+import Link from 'next/link';
+import { Eye, EyeOff, AlertCircle, Building2, Users, Shield, GitBranch } from 'lucide-react';
 import { useAuth, getDashboardRoute } from '@/lib/auth-context';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
@@ -508,12 +509,28 @@ function LoginForm() {
                 </motion.button>
               ))}
             </div>
-          </div>
-        </motion.div>
+
+            {/* Workflow link */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              className="mt-4 text-center"
+            >
+                <Link
+                  href="/workflow"
+                  className="inline-flex items-center gap-2 text-xs text-[#6B7280] hover:text-[#CC0000] transition-colors group"
+                >
+                  <GitBranch className="w-3.5 h-3.5 group-hover:text-[#CC0000] transition-colors" />
+                  {lang === 'fr' ? 'Voir le diagramme de séquence du système' : 'View system sequence diagram'}
+                </Link>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
 export default function LoginPage() {
   return <LoginForm />;

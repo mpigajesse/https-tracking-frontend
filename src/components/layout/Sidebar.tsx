@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Building2,
   LogOut,
+  GitBranch,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useI18n, TranslationKey } from '@/lib/i18n';
@@ -48,6 +49,7 @@ const navItems: NavItem[] = [
   { labelKey: 'nav_my_sessions',   href: '/mes-sessions',  icon: History,         roles: ['interimaire'] },
   { labelKey: 'nav_my_qr',         href: '/mon-qr',        icon: QrCode,          roles: ['interimaire'] },
   { labelKey: 'nav_settings',      href: '/parametres',    icon: Settings,        roles: ['admin', 'technicien', 'receptionniste', 'interimaire'] },
+  { labelKey: 'nav_workflow',      href: '/workflow',      icon: GitBranch,       roles: ['admin', 'technicien', 'receptionniste', 'interimaire'] },
 ];
 
 const roleColorMap: Record<UserRole, string> = {

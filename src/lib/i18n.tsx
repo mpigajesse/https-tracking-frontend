@@ -19,7 +19,8 @@ const translations = {
     nav_my_dashboard: 'Mon Dashboard',
     nav_my_sessions: 'Mes Sessions',
     nav_my_qr: 'Mon QR Code',
-    nav_settings: 'Paramètres',
+      nav_settings: 'Paramètres',
+      nav_workflow: 'Diagramme Flux',
     // ── Roles ────────────────────────────────────────────
     role_admin: 'Administrateur',
     role_technicien: 'Technicien',
@@ -343,7 +344,8 @@ const translations = {
     nav_my_dashboard: 'My Dashboard',
     nav_my_sessions: 'My Sessions',
     nav_my_qr: 'My QR Code',
-    nav_settings: 'Settings',
+      nav_settings: 'Settings',
+      nav_workflow: 'Workflow Diagram',
     // ── Roles ────────────────────────────────────────────
     role_admin: 'Administrator',
     role_technicien: 'Technician',
