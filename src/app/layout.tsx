@@ -12,6 +12,7 @@ import { VisualEditsMessenger } from "orchids-visual-edits";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/lib/auth-context";
 import { I18nProvider } from "@/lib/i18n";
+import PWAInstallBanner from "@/components/ui/PWAInstallBanner";
 
 /* ── Premium Google Fonts ─────────────────────────────────────── */
 const syne = Syne({
@@ -114,7 +115,8 @@ export default function RootLayout({
                   },
               }}
             />
-            <VisualEditsMessenger />
+              <PWAInstallBanner />
+              <VisualEditsMessenger />
           </AuthProvider>
         </I18nProvider>
       </body>
