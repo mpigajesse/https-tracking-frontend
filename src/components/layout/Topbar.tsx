@@ -18,6 +18,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useI18n } from '@/lib/i18n';
 import { mockAlerts } from '@/lib/data';
 import { cn } from '@/lib/utils';
+import { usePWAInstall } from '@/components/ui/PWAInstallBanner';
 
 export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const [darkMode, setDarkMode] = useState(false);
@@ -26,6 +27,12 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const { user, logout } = useAuth();
   const { lang, setLang, t } = useI18n();
   const router = useRouter();
+  const { deferredPrompt, platform, isInstalled, installing, triggerInstall } = usePWAInstall();
+
+  const showInstallBtn =
+    !isInstalled &&
+    (platform === 'desktop-chrome-edge' || platform === 'desktop-safari' || platform === 'desktop-other') &&
+    (deferredPrompt !== null || platform === 'desktop-safari');
 
   const handleLogout = () => {
     logout();
@@ -88,9 +95,29 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
           <span className={cn('relative z-10 px-2 py-0.5 text-xs font-bold rounded-full transition-colors w-8 text-center', lang === 'en' ? 'text-white' : 'text-[#6B7280]')}>EN</span>
         </motion.button>
 
-        {/* Dark mode */}
-        <button
-          onClick={toggleDark}
+          {/* PWA Install — desktop only, visible si prompt disponible */}
+          {showInstallBtn && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={platform === 'desktop-chrome-edge' ? triggerInstall : undefined}
+              title={
+                platform === 'desktop-safari'
+                  ? 'Partager → Ajouter au Dock'
+                  : "Installer l'application sur votre bureau"
+              }
+              disabled={installing}
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg,#CC0000,#7A0000)' }}
+            >
+              <Download className="w-3.5 h-3.5" />
+              {installing ? 'Installation…' : 'Installer'}
+            </motion.button>
+          )}
+
+          {/* Dark mode */}
+          <button
+            onClick={toggleDark}
           className="p-2 rounded-lg text-[#6B7280] hover:bg-[#F0F0F0] dark:hover:bg-[#2A2A2A] hover:text-[#CC0000] transition-colors"
         >
           {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}

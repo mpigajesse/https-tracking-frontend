@@ -13,6 +13,7 @@ import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/lib/auth-context";
 import { I18nProvider } from "@/lib/i18n";
 import PWAInstallBanner from "@/components/ui/PWAInstallBanner";
+import ServiceWorkerRegistrar from "@/components/ui/ServiceWorkerRegistrar";
 
 /* ── Premium Google Fonts ─────────────────────────────────────── */
 const syne = Syne({
@@ -116,6 +117,7 @@ export default function RootLayout({
               }}
             />
               <PWAInstallBanner />
+              <ServiceWorkerRegistrar />
               <VisualEditsMessenger />
           </AuthProvider>
         </I18nProvider>
