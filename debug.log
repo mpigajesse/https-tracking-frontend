@@ -43,3 +43,148 @@ It can also happen if the client has a browser extension installed which messes 
 
 2026-02-18T12:56:08.301Z [console][error] Failed to fetch RSC payload for https://3000-7b0750f7-7915-4a31-aa9a-df4a02dcca44.orchids.cloud/validation. Falling back to browser navigation. {}
 2026-02-18T12:56:15.662Z [console][error] Failed to fetch RSC payload for https://3000-7b0750f7-7915-4a31-aa9a-df4a02dcca44.orchids.cloud/utilisateurs. Falling back to browser navigation. {}
+2026-02-18T13:31:58.044Z [console][error] ./https-tracking-frontend/src/app/layout.tsx
+Error evaluating Node.js code
+SyntaxError: Expected corresponding JSX closing tag for <I18nProvider>. (52:6)
+    [at toParseError (D:\https-tracking-frontend\node_modules\@babel\parser\src\parse-error.ts:95:45)]
+    [at TypeScriptParserMixin.raise (D:\https-tracking-frontend\node_modules\@babel\parser\src\tokenizer\index.ts:1507:19)]
+    [at TypeScriptParserMixin.jsxParseElementAt (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:527:18)]
+    [at TypeScriptParserMixin.jsxParseElementAt (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:483:34)]
+    [at TypeScriptParserMixin.jsxParseElementAt (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:483:34)]
+    [at TypeScriptParserMixin.jsxParseElement (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:559:19)]
+    [at TypeScriptParserMixin.parseExprAtom (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:573:21)]
+    [at TypeScriptParserMixin.parseExprSubscripts (D:\https-tracking-frontend\node_modules\@babel\parser\src\parser\expression.ts:742:23)]
+    [at TypeScriptParserMixin.parseUpdate (D:\https-tracking-frontend\node_modules\@babel\parser\src\parser\expression.ts:721:21)]
+    [at TypeScriptParserMixin.parseMaybeUnary (D:\https-tracking-frontend\node_modules\@babel\parser\src\parser\expression.ts:683:23)]
+2026-02-18T13:31:58.044Z [console][error] ./https-tracking-frontend/src/app/layout.tsx:52:14
+Parsing ecmascript source code failed
+  50 |           <VisualEditsMessenger />
+  51 |         </AuthProvider>
+> 52 |       </body>
+     |              ^
+> 53 |     </html>
+     | ^^^^^
+  54 |   );
+  55 | }
+  56 |
+
+Expected '</', got 'jsx text (
+    )'
+2026-02-18T13:31:58.045Z [console][error] ./https-tracking-frontend/src/app/layout.tsx:52:14
+Parsing ecmascript source code failed
+  50 |           <VisualEditsMessenger />
+  51 |         </AuthProvider>
+> 52 |       </body>
+     |              ^
+> 53 |     </html>
+     | ^^^^^
+  54 |   );
+  55 | }
+  56 |
+
+Expected '</', got 'jsx text (
+    )'
+2026-02-18T13:31:58.584Z [console][error] ./https-tracking-frontend/src/app/layout.tsx
+Error evaluating Node.js code
+SyntaxError: Expected corresponding JSX closing tag for <I18nProvider>. (52:6)
+    [at toParseError (D:\https-tracking-frontend\node_modules\@babel\parser\src\parse-error.ts:95:45)]
+    [at TypeScriptParserMixin.raise (D:\https-tracking-frontend\node_modules\@babel\parser\src\tokenizer\index.ts:1507:19)]
+    [at TypeScriptParserMixin.jsxParseElementAt (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:527:18)]
+    [at TypeScriptParserMixin.jsxParseElementAt (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:483:34)]
+    [at TypeScriptParserMixin.jsxParseElementAt (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:483:34)]
+    [at TypeScriptParserMixin.jsxParseElement (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:559:19)]
+    [at TypeScriptParserMixin.parseExprAtom (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:573:21)]
+    [at TypeScriptParserMixin.parseExprSubscripts (D:\https-tracking-frontend\node_modules\@babel\parser\src\parser\expression.ts:742:23)]
+    [at TypeScriptParserMixin.parseUpdate (D:\https-tracking-frontend\node_modules\@babel\parser\src\parser\expression.ts:721:21)]
+    [at TypeScriptParserMixin.parseMaybeUnary (D:\https-tracking-frontend\node_modules\@babel\parser\src\parser\expression.ts:683:23)]
+2026-02-18T13:31:58.584Z [console][error] ./https-tracking-frontend/src/app/layout.tsx:52:14
+Parsing ecmascript source code failed
+  50 |           <VisualEditsMessenger />
+  51 |         </AuthProvider>
+> 52 |       </body>
+     |              ^
+> 53 |     </html>
+     | ^^^^^
+  54 |   );
+  55 | }
+  56 |
+
+Expected '</', got 'jsx text (
+    )'
+2026-02-18T13:31:58.040Z [console][error] ./https-tracking-frontend/src/app/layout.tsx:52:14
+Parsing ecmascript source code failed
+  50 |           <VisualEditsMessenger />
+  51 |         </AuthProvider>
+> 52 |       </body>
+     |              ^
+> 53 |     </html>
+     | ^^^^^
+  54 |   );
+  55 | }
+  56 |
+
+Expected '</', got 'jsx text (
+    )'
+2026-02-18T13:31:58.042Z [console][error] ./https-tracking-frontend/src/app/layout.tsx:52:14
+Parsing ecmascript source code failed
+  50 |           <VisualEditsMessenger />
+  51 |         </AuthProvider>
+> 52 |       </body>
+     |              ^
+> 53 |     </html>
+     | ^^^^^
+  54 |   );
+  55 | }
+  56 |
+
+Expected '</', got 'jsx text (
+    )'
+2026-02-18T13:31:58.042Z [console][error] ./https-tracking-frontend/src/app/layout.tsx
+Error evaluating Node.js code
+SyntaxError: Expected corresponding JSX closing tag for <I18nProvider>. (52:6)
+    [at toParseError (D:\https-tracking-frontend\node_modules\@babel\parser\src\parse-error.ts:95:45)]
+    [at TypeScriptParserMixin.raise (D:\https-tracking-frontend\node_modules\@babel\parser\src\tokenizer\index.ts:1507:19)]
+    [at TypeScriptParserMixin.jsxParseElementAt (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:527:18)]
+    [at TypeScriptParserMixin.jsxParseElementAt (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:483:34)]
+    [at TypeScriptParserMixin.jsxParseElementAt (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:483:34)]
+    [at TypeScriptParserMixin.jsxParseElement (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:559:19)]
+    [at TypeScriptParserMixin.parseExprAtom (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:573:21)]
+    [at TypeScriptParserMixin.parseExprSubscripts (D:\https-tracking-frontend\node_modules\@babel\parser\src\parser\expression.ts:742:23)]
+    [at TypeScriptParserMixin.parseUpdate (D:\https-tracking-frontend\node_modules\@babel\parser\src\parser\expression.ts:721:21)]
+    [at TypeScriptParserMixin.parseMaybeUnary (D:\https-tracking-frontend\node_modules\@babel\parser\src\parser\expression.ts:683:23)]
+2026-02-18T13:31:58.583Z [console][error] ./https-tracking-frontend/src/app/layout.tsx
+Error evaluating Node.js code
+SyntaxError: Expected corresponding JSX closing tag for <I18nProvider>. (52:6)
+    [at toParseError (D:\https-tracking-frontend\node_modules\@babel\parser\src\parse-error.ts:95:45)]
+    [at TypeScriptParserMixin.raise (D:\https-tracking-frontend\node_modules\@babel\parser\src\tokenizer\index.ts:1507:19)]
+    [at TypeScriptParserMixin.jsxParseElementAt (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:527:18)]
+    [at TypeScriptParserMixin.jsxParseElementAt (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:483:34)]
+    [at TypeScriptParserMixin.jsxParseElementAt (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:483:34)]
+    [at TypeScriptParserMixin.jsxParseElement (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:559:19)]
+    [at TypeScriptParserMixin.parseExprAtom (D:\https-tracking-frontend\node_modules\@babel\parser\src\plugins\jsx\index.ts:573:21)]
+    [at TypeScriptParserMixin.parseExprSubscripts (D:\https-tracking-frontend\node_modules\@babel\parser\src\parser\expression.ts:742:23)]
+    [at TypeScriptParserMixin.parseUpdate (D:\https-tracking-frontend\node_modules\@babel\parser\src\parser\expression.ts:721:21)]
+    [at TypeScriptParserMixin.parseMaybeUnary (D:\https-tracking-frontend\node_modules\@babel\parser\src\parser\expression.ts:683:23)]
+2026-02-18T13:31:58.583Z [console][error] ./https-tracking-frontend/src/app/layout.tsx:52:14
+Parsing ecmascript source code failed
+  50 |           <VisualEditsMessenger />
+  51 |         </AuthProvider>
+> 52 |       </body>
+     |              ^
+> 53 |     </html>
+     | ^^^^^
+  54 |   );
+  55 | }
+  56 |
+
+Expected '</', got 'jsx text (
+    )'
+2026-02-18T13:34:00.772Z [console][debug] __ORCHIDS_NAVIGATE__ http://localhost:3001/alertes
+2026-02-18T14:03:55.993Z [console][error] Image with src "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Lear_Corporation_logo.svg/960px-Lear_Corporation_logo.svg.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+2026-02-18T14:32:36.601Z [console][error] Uncaught ReferenceError: CountUp is not defined
+2026-02-18T14:32:47.621Z [console][error] [Fast Refresh] performing full reload because your application had an unrecoverable error
+2026-02-18T14:54:13.175Z [console][error] Image with src "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Lear_Corporation_logo.svg/960px-Lear_Corporation_logo.svg.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+2026-02-18T14:54:20.641Z [console][error] You are trying to animate color from "#2563EB" to "inherit". "inherit" is not an animatable value.. For more information and steps for solving, visit https://motion.dev/troubleshooting/value-not-animatable
+2026-02-18T14:54:20.969Z [console][error] You are trying to animate color from "#2563EB" to "inherit". "inherit" is not an animatable value.. For more information and steps for solving, visit https://motion.dev/troubleshooting/value-not-animatable
+2026-02-18T14:54:24.498Z [console][error] You are trying to animate color from "#2563EB" to "inherit". "inherit" is not an animatable value.. For more information and steps for solving, visit https://motion.dev/troubleshooting/value-not-animatable
+2026-02-18T14:54:24.499Z [console][error] You are trying to animate color from "#2563EB" to "inherit". "inherit" is not an animatable value.. For more information and steps for solving, visit https://motion.dev/troubleshooting/value-not-animatable

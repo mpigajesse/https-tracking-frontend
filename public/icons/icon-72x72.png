@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#2A0000"/>
+      <stop offset="100%" stop-color="#0A0A0A"/>
+    </radialGradient>
+  </defs>
+  <rect width="72" height="72" rx="14.4" fill="url(#bg)"/>
+  <rect x="4.32" y="4.32" width="63.36" height="63.36" rx="10.799999999999999" fill="none" stroke="#CC0000" stroke-width="1.8" stroke-opacity="0.4"/>
+  <text x="36" y="40.32000000000001" font-family="Arial Black,Arial,sans-serif" font-size="30.24" font-weight="900" fill="#CC0000" text-anchor="middle" dominant-baseline="middle">L</text>
+  <text x="36" y="59.04" font-family="Arial,sans-serif" font-size="7.2" font-weight="bold" fill="#888888" text-anchor="middle" letter-spacing="1.44">LEAR</text>
+</svg>

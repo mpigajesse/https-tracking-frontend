@@ -4,176 +4,158 @@ import AppLayout from '@/components/layout/AppLayout';
 import { StatCard } from '@/components/ui/StatCard';
 import {
   Clock, DollarSign, Users, AlertTriangle,
-  TrendingUp, Filter, Download, RefreshCw,
-  Building2, Calendar, ChevronDown,
+  TrendingUp, Download, RefreshCw, ChevronDown,
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import {
-  chartDataHeures, chartDataSites, chartDataAgences, heatmapData, mockAlerts, mockSessions,
-  SITES, AGENCES,
+  chartDataHeures, chartDataSites, chartDataAgences, heatmapData, mockAlerts, mockSessions, SITES,
 } from '@/lib/data';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { useI18n } from '@/lib/i18n';
 
-const PIE_COLORS = ['#2563EB', '#16A34A', '#F59E0B', '#DC2626', '#7C3AED'];
+const LEAR_RED   = '#CC0000';
+const CHART_GREEN  = '#16A34A';
+const CHART_AMBER  = '#F59E0B';
+const CHART_SLATE  = '#64748B';
+const CHART_PURPLE = '#7C3AED';
+const PIE_COLORS = [LEAR_RED, '#1C1C1C', CHART_GREEN, CHART_AMBER, CHART_PURPLE];
 
 const heatIntensity = (val: number) => {
-  if (val === 0) return 'bg-gray-100 dark:bg-gray-800';
-  if (val < 20) return 'bg-blue-100 dark:bg-blue-900/30';
-  if (val < 40) return 'bg-blue-200 dark:bg-blue-800/40';
-  if (val < 60) return 'bg-blue-400 dark:bg-blue-700/60';
-  if (val < 80) return 'bg-blue-600 dark:bg-blue-600/80';
-  return 'bg-blue-800 dark:bg-blue-500';
+  if (val === 0) return 'bg-gray-100 dark:bg-[#1C1C1C]';
+  if (val < 20)  return 'bg-[#FFF0F0] dark:bg-[#2A0000]';
+  if (val < 40)  return 'bg-[#FFCCCC] dark:bg-[#550000]';
+  if (val < 60)  return 'bg-[#FF8080] dark:bg-[#880000]';
+  if (val < 80)  return 'bg-[#CC0000] dark:bg-[#AA0000]';
+  return 'bg-[#7A0000] dark:bg-[#CC0000]';
 };
 
-const DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+const tooltipStyle = {
+  contentStyle: { background: '#1C1C1C', border: '1px solid #2A2A2A', borderRadius: '8px', color: '#F5F5F5' },
+  labelStyle: { color: '#9CA3AF' },
+};
 
 export default function DashboardPage() {
+  const { t } = useI18n();
   const [dateRange, setDateRange] = useState('7j');
-  const [selectedSite, setSelectedSite] = useState('Tous');
+  const [selectedSite, setSelectedSite] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+
+  const DAYS = t('dash_days').split(',');
 
   const handleRefresh = () => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 1000);
   };
 
+  const sessionStatusLabel = (statut: string) => {
+    const map: Record<string, string> = {
+      fermee: t('dash_status_closed'),
+      en_litige: t('dash_status_dispute'),
+      en_attente_fermeture: t('dash_status_wait_close'),
+      en_attente_ouverture: t('dash_status_wait_open'),
+    };
+    return map[statut] ?? statut;
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
-        {/* Page header */}
+
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard 360°</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Vue analytique complète – Mis à jour à {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('dash_title')}</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              {t('dash_subtitle')} {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            {/* Date range */}
-            <div className="flex bg-white dark:bg-[#1E293B] rounded-xl border border-gray-200 dark:border-[#334155] overflow-hidden">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex bg-white dark:bg-[#1C1C1C] rounded-xl border border-[#E5E5E5] dark:border-[#2A2A2A] overflow-hidden">
               {['7j', '30j', '3m', '1a'].map(range => (
                 <button
                   key={range}
                   onClick={() => setDateRange(range)}
-                  className={`px-3 py-2 text-sm font-medium transition-colors ${
-                    dateRange === range
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#334155]'
-                  }`}
+                  className="px-3 py-2 text-sm font-medium transition-colors"
+                  style={{ background: dateRange === range ? LEAR_RED : 'transparent', color: dateRange === range ? '#fff' : undefined }}
                 >
                   {range}
                 </button>
               ))}
             </div>
-            {/* Site filter */}
             <div className="relative">
               <select
                 value={selectedSite}
                 onChange={e => setSelectedSite(e.target.value)}
-                className="appearance-none pl-3 pr-8 py-2 text-sm rounded-xl border border-gray-200 dark:border-[#334155] bg-white dark:bg-[#1E293B] text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="appearance-none pl-3 pr-8 py-2 text-sm rounded-xl border border-[#E5E5E5] dark:border-[#2A2A2A] bg-white dark:bg-[#1C1C1C] text-gray-700 dark:text-gray-300 focus:outline-none"
               >
-                <option>Tous</option>
+                <option value="">{t('dash_filter_all')}</option>
                 {SITES.map(s => <option key={s}>{s}</option>)}
               </select>
               <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
             <button
               onClick={handleRefresh}
-              className="p-2 rounded-xl border border-gray-200 dark:border-[#334155] bg-white dark:bg-[#1E293B] text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#334155] transition-colors"
+              className="p-2 rounded-xl border border-[#E5E5E5] dark:border-[#2A2A2A] bg-white dark:bg-[#1C1C1C] text-gray-600 dark:text-gray-400 hover:text-[#CC0000] transition-colors"
             >
               <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors">
+            <button
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium transition-all hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #CC0000, #7A0000)' }}
+            >
               <Download className="w-4 h-4" />
-              Export
+              {t('dash_export')}
             </button>
           </div>
         </div>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          <StatCard
-            title="Heures totales (7j)"
-            value="1 827"
-            subtitle="heures travaillées"
-            icon={Clock}
-            trend={{ value: 12.4, label: 'vs sem. passée' }}
-            color="blue"
-            index={0}
-          />
-          <StatCard
-            title="Coût intérim estimé"
-            value="27 405 MAD"
-            subtitle="cette semaine"
-            icon={DollarSign}
-            trend={{ value: -3.2, label: 'vs sem. passée' }}
-            color="green"
-            index={1}
-          />
-          <StatCard
-            title="Intérimaires présents"
-            value="169"
-            subtitle="sur 5 sites"
-            icon={Users}
-            trend={{ value: 5.8, label: 'vs hier' }}
-            color="purple"
-            index={2}
-          />
-          <StatCard
-            title="Alertes actives"
-            value="4"
-            subtitle="sessions à valider"
-            icon={AlertTriangle}
-            trend={{ value: -1, label: 'vs hier' }}
-            color="red"
-            index={3}
-          />
+          <StatCard title={t('dash_kpi_hours')} value="1 827" subtitle={t('dash_kpi_hours_sub')} icon={Clock} trend={{ value: 12.4, label: t('dash_vs_last_week') }} color="red" index={0} />
+          <StatCard title={t('dash_kpi_cost')} value="27 405 MAD" subtitle={t('dash_kpi_cost_sub')} icon={DollarSign} trend={{ value: -3.2, label: t('dash_vs_last_week') }} color="green" index={1} />
+          <StatCard title={t('dash_kpi_present')} value="169" subtitle={t('dash_kpi_present_sub')} icon={Users} trend={{ value: 5.8, label: t('dash_vs_yesterday') }} color="dark" index={2} />
+          <StatCard title={t('dash_kpi_alerts')} value="4" subtitle={t('dash_kpi_alerts_sub')} icon={AlertTriangle} trend={{ value: -1, label: t('dash_vs_yesterday') }} color="red" index={3} />
         </div>
 
         {/* Charts row 1 */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Line chart */}
-          <div className="xl:col-span-2 bg-white dark:bg-[#1E293B] rounded-xl border border-gray-200 dark:border-[#334155] p-6">
+          <div className="xl:col-span-2 bg-white dark:bg-[#1C1C1C] rounded-xl border border-[#E5E5E5] dark:border-[#2A2A2A] p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Évolution des heures</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Heures & coûts sur 7 jours</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">{t('dash_chart_hours_title')}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('dash_chart_hours_sub')}</p>
               </div>
-              <TrendingUp className="w-5 h-5 text-blue-500" />
+              <TrendingUp className="w-5 h-5 text-[#CC0000]" />
             </div>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={chartDataHeures}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" strokeOpacity={0.3} />
-                <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ background: '#1E293B', border: '1px solid #334155', borderRadius: '8px', color: '#F8FAFC' }}
-                  labelStyle={{ color: '#94A3B8' }}
-                />
+                <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" strokeOpacity={0.5} />
+                <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <Tooltip {...tooltipStyle} />
                 <Legend />
-                <Line type="monotone" dataKey="heures" stroke="#2563EB" strokeWidth={2.5} dot={{ fill: '#2563EB', r: 4 }} name="Heures" />
-                <Line type="monotone" dataKey="cout" stroke="#16A34A" strokeWidth={2.5} dot={{ fill: '#16A34A', r: 4 }} name="Coût (MAD)" />
+                <Line type="monotone" dataKey="heures" stroke={LEAR_RED} strokeWidth={2.5} dot={{ fill: LEAR_RED, r: 4 }} name={t('dash_chart_hours_legend')} />
+                <Line type="monotone" dataKey="cout" stroke={CHART_GREEN} strokeWidth={2.5} dot={{ fill: CHART_GREEN, r: 4 }} name={t('dash_chart_cost_legend')} />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Pie chart */}
-          <div className="bg-white dark:bg-[#1E293B] rounded-xl border border-gray-200 dark:border-[#334155] p-6">
+          <div className="bg-white dark:bg-[#1C1C1C] rounded-xl border border-[#E5E5E5] dark:border-[#2A2A2A] p-6">
             <div className="mb-6">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Répartition Agences</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">% intérimaires par agence</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white">{t('dash_chart_agencies_title')}</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('dash_chart_agencies_sub')}</p>
             </div>
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie data={chartDataAgences} cx="50%" cy="50%" innerRadius={50} outerRadius={75} dataKey="value" paddingAngle={3}>
-                  {chartDataAgences.map((_, i) => (
-                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                  ))}
+                  {chartDataAgences.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                 </Pie>
-                <Tooltip contentStyle={{ background: '#1E293B', border: '1px solid #334155', borderRadius: '8px', color: '#F8FAFC' }} />
+                <Tooltip {...tooltipStyle} />
               </PieChart>
             </ResponsiveContainer>
             <div className="space-y-2 mt-2">
@@ -192,36 +174,34 @@ export default function DashboardPage() {
 
         {/* Charts row 2 */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {/* Bar chart */}
-          <div className="bg-white dark:bg-[#1E293B] rounded-xl border border-gray-200 dark:border-[#334155] p-6">
+          <div className="bg-white dark:bg-[#1C1C1C] rounded-xl border border-[#E5E5E5] dark:border-[#2A2A2A] p-6">
             <div className="mb-6">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Comparatif sites</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Heures & effectifs par site</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white">{t('dash_chart_sites_title')}</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('dash_chart_sites_sub')}</p>
             </div>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={chartDataSites} barGap={4}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" strokeOpacity={0.3} />
-                <XAxis dataKey="site" tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: '#1E293B', border: '1px solid #334155', borderRadius: '8px', color: '#F8FAFC' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" strokeOpacity={0.5} />
+                <XAxis dataKey="site" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <Tooltip {...tooltipStyle} />
                 <Legend />
-                <Bar dataKey="heures" fill="#2563EB" radius={[4, 4, 0, 0]} name="Heures" />
-                <Bar dataKey="interimaires" fill="#16A34A" radius={[4, 4, 0, 0]} name="Intérimaires" />
+                <Bar dataKey="heures" fill={LEAR_RED} radius={[4, 4, 0, 0]} name={t('dash_chart_sites_h')} />
+                <Bar dataKey="interimaires" fill={CHART_SLATE} radius={[4, 4, 0, 0]} name={t('dash_chart_sites_i')} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Heatmap */}
-          <div className="bg-white dark:bg-[#1E293B] rounded-xl border border-gray-200 dark:border-[#334155] p-6">
+          <div className="bg-white dark:bg-[#1C1C1C] rounded-xl border border-[#E5E5E5] dark:border-[#2A2A2A] p-6">
             <div className="mb-6">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Heatmap charge horaire</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Nombre de pointages par heure/jour</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white">{t('dash_heatmap_title')}</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t('dash_heatmap_sub')}</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
                   <tr>
-                    <th className="text-gray-400 font-normal text-left pr-2 w-12">Heure</th>
+                    <th className="text-gray-400 font-normal text-left pr-2 w-12">{t('dash_heatmap_hour')}</th>
                     {DAYS.map(d => (
                       <th key={d} className="text-gray-400 font-normal text-center px-1">{d}</th>
                     ))}
@@ -245,69 +225,71 @@ export default function DashboardPage() {
               </table>
             </div>
             <div className="flex items-center gap-2 mt-4 text-xs text-gray-500 dark:text-gray-400">
-              <span>Faible</span>
-              {['bg-blue-100', 'bg-blue-200', 'bg-blue-400', 'bg-blue-600', 'bg-blue-800'].map(c => (
-                <span key={c} className={`w-4 h-3 rounded ${c}`} />
+              <span>{t('dash_heatmap_low')}</span>
+              {['bg-[#FFF0F0]', 'bg-[#FFCCCC]', 'bg-[#FF8080]', 'bg-[#CC0000]', 'bg-[#7A0000]'].map((c, i) => (
+                <span key={i} className={`w-4 h-3 rounded ${c}`} />
               ))}
-              <span>Élevé</span>
+              <span>{t('dash_heatmap_high')}</span>
             </div>
           </div>
         </div>
 
         {/* Recent alerts + sessions */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {/* Recent alerts */}
-          <div className="bg-white dark:bg-[#1E293B] rounded-xl border border-gray-200 dark:border-[#334155] p-6">
+          <div className="bg-white dark:bg-[#1C1C1C] rounded-xl border border-[#E5E5E5] dark:border-[#2A2A2A] p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Alertes récentes</h3>
-              <a href="/alertes" className="text-xs text-blue-600 hover:underline">Voir tout</a>
+              <h3 className="font-semibold text-gray-900 dark:text-white">{t('dash_recent_alerts')}</h3>
+              <a href="/alertes" className="text-xs text-[#CC0000] hover:text-[#AA0000] transition-colors">{t('dash_see_all')}</a>
             </div>
             <div className="space-y-3">
               {mockAlerts.map(alert => (
-                <div key={alert.id} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-[#0F172A]">
-                  <span className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${alert.severity === 'high' ? 'bg-red-500' : 'bg-yellow-500'}`} />
+                <div key={alert.id} className="flex items-start gap-3 p-3 rounded-lg bg-[#F5F5F5] dark:bg-[#111111]">
+                  <span className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${alert.severity === 'high' ? 'bg-[#CC0000]' : 'bg-[#F59E0B]'}`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900 dark:text-white truncate">{alert.message}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{alert.interimaireNom} – {alert.site}</p>
                   </div>
                   <StatusBadge variant={alert.severity === 'high' ? 'danger' : 'warning'}>
-                    {alert.severity === 'high' ? 'Urgent' : 'Moyen'}
+                    {alert.severity === 'high' ? t('dash_urgent') : t('dash_medium')}
                   </StatusBadge>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Recent sessions */}
-          <div className="bg-white dark:bg-[#1E293B] rounded-xl border border-gray-200 dark:border-[#334155] p-6">
+          <div className="bg-white dark:bg-[#1C1C1C] rounded-xl border border-[#E5E5E5] dark:border-[#2A2A2A] p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Sessions récentes</h3>
-              <a href="/validation" className="text-xs text-blue-600 hover:underline">Voir tout</a>
+              <h3 className="font-semibold text-gray-900 dark:text-white">{t('dash_recent_sessions')}</h3>
+              <a href="/validation" className="text-xs text-[#CC0000] hover:text-[#AA0000] transition-colors">{t('dash_see_all')}</a>
             </div>
             <div className="space-y-3">
               {mockSessions.slice(0, 4).map(session => (
-                <div key={session.id} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-[#0F172A]">
-                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
-                    {session.interimaireNom.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                <div key={session.id} className="flex items-center gap-3 p-3 rounded-lg bg-[#F5F5F5] dark:bg-[#111111]">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0"
+                    style={{ background: 'linear-gradient(135deg, #CC0000, #7A0000)' }}
+                  >
+                    {session.interimaireNom.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{session.interimaireNom}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{session.site} · {new Date(session.heureDebut).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {session.site} · {new Date(session.heureDebut).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
                   </div>
                   <StatusBadge variant={
                     session.statut === 'fermee' ? 'success' :
                     session.statut === 'en_litige' ? 'danger' :
                     session.statut === 'en_attente_fermeture' ? 'warning' : 'info'
                   }>
-                    {session.statut === 'fermee' ? 'Fermée' :
-                     session.statut === 'en_litige' ? 'Litige' :
-                     session.statut === 'en_attente_fermeture' ? 'Att. fermeture' : 'Att. ouverture'}
+                    {sessionStatusLabel(session.statut)}
                   </StatusBadge>
                 </div>
               ))}
             </div>
           </div>
         </div>
+
       </div>
     </AppLayout>
   );

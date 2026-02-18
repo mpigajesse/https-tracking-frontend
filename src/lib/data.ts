@@ -73,6 +73,31 @@ export const SITES = ['Site Casablanca', 'Site Rabat', 'Site Tanger', 'Site Fès
 export const AGENCES = ['TempoPro', 'InterWork', 'FlexiStaff', 'ProIntérim', 'StaffPlus'];
 export const FONCTIONS = ['Opérateur', 'Technicien', 'Chef d\'équipe', 'Magasinier', 'Conducteur'];
 
+export type SiteStatut = 'actif' | 'maintenance' | 'ferme';
+
+export interface Site {
+  id: string;
+  nom: string;
+  ville: string;
+  adresse: string;
+  responsable: string;
+  telephone: string;
+  email: string;
+  capaciteMax: number;
+  statut: SiteStatut;
+  createdAt: string;
+  superficie?: string;
+  secteur: string;
+}
+
+export const mockSites: Site[] = [
+  { id: 'site1', nom: 'Site Casablanca', ville: 'Casablanca', adresse: 'Zone Industrielle Ain Sebaa, Lot 12', responsable: 'Karim Benali', telephone: '05 22 34 56 78', email: 'casablanca@pointage.ma', capaciteMax: 60, statut: 'actif', createdAt: '2023-01-10', superficie: '4 200 m²', secteur: 'Industrie' },
+  { id: 'site2', nom: 'Site Rabat', ville: 'Rabat', adresse: 'Parc Industriel Technopolis, Bât. B', responsable: 'Fatima Alaoui', telephone: '05 37 78 90 12', email: 'rabat@pointage.ma', capaciteMax: 45, statut: 'actif', createdAt: '2023-03-15', superficie: '3 100 m²', secteur: 'Logistique' },
+  { id: 'site3', nom: 'Site Tanger', ville: 'Tanger', adresse: 'Tanger Med Zone Franche, Lot 7', responsable: 'Hassan Chraibi', telephone: '05 39 45 67 89', email: 'tanger@pointage.ma', capaciteMax: 35, statut: 'actif', createdAt: '2023-05-20', superficie: '2 800 m²', secteur: 'Export' },
+  { id: 'site4', nom: 'Site Fès', ville: 'Fès', adresse: 'Zone Industrielle Sidi Brahim, Rue 4', responsable: 'Leila Berrada', telephone: '05 35 60 23 45', email: 'fes@pointage.ma', capaciteMax: 30, statut: 'maintenance', createdAt: '2023-07-01', superficie: '2 200 m²', secteur: 'Textile' },
+  { id: 'site5', nom: 'Site Marrakech', ville: 'Marrakech', adresse: 'Zone Industrielle M\'Hamid, Secteur 3', responsable: 'Abdelaziz Filali', telephone: '05 24 44 55 66', email: 'marrakech@pointage.ma', capaciteMax: 40, statut: 'actif', createdAt: '2023-09-12', superficie: '3 500 m²', secteur: 'Agroalimentaire' },
+];
+
 export const mockUsers: User[] = [
   { id: 'u1', nom: 'Benali', prenom: 'Karim', email: 'admin@pointage.ma', role: 'admin', site: 'Tous', statut: 'actif', createdAt: '2024-01-15' },
   { id: 'u2', nom: 'Alaoui', prenom: 'Fatima', email: 'tech@pointage.ma', role: 'technicien', site: 'Site Casablanca', statut: 'actif', createdAt: '2024-02-10' },

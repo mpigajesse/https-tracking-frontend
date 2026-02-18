@@ -6,8 +6,12 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), var(--font-dm-sans), system-ui, sans-serif;
+  --font-heading: var(--font-syne), var(--font-space-grotesk), sans-serif;
+  --font-data: var(--font-space-grotesk), var(--font-geist-sans), sans-serif;
+  --font-body: var(--font-dm-sans), var(--font-geist-sans), sans-serif;
+  --font-display: var(--font-dm-serif), Georgia, serif;
+  --font-mono: var(--font-geist-mono), "Fira Code", monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -43,81 +47,100 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ─── Lear Corporation Color Palette ─────────────────────────────────────── */
+/* Primary red   : #CC0000                                                     */
+/* Dark red hover: #AA0000                                                     */
+/* Sidebar bg    : #111111  (near-black like logo)                             */
+/* Sidebar item  : #1C1C1C                                                     */
+/* Background    : #F5F5F5  (off-white, clean)                                 */
+/* Card bg       : #FFFFFF                                                     */
+/* Border        : #E5E5E5                                                     */
+/* Text primary  : #111111                                                     */
+/* Text muted    : #6B7280                                                     */
+
 :root {
   --radius: 0.625rem;
-  /* Brand colors */
-  --brand-primary: #0F172A;
-  --brand-secondary: #1E293B;
-  --brand-accent: #2563EB;
-  --brand-success: #16A34A;
-  --brand-danger: #DC2626;
-  --brand-warning: #F59E0B;
 
-  --background: #F8FAFC;
-  --foreground: #0F172A;
-  --card: #FFFFFF;
-  --card-foreground: #0F172A;
-  --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
-  --primary: #2563EB;
-  --primary-foreground: #FFFFFF;
-  --secondary: #1E293B;
+  /* Lear brand */
+  --lear-red:        #CC0000;
+  --lear-red-dark:   #AA0000;
+  --lear-red-light:  #FF1A1A;
+  --lear-red-muted:  #FFF0F0;
+  --lear-black:      #111111;
+  --lear-dark:       #1C1C1C;
+  --lear-charcoal:   #2A2A2A;
+
+  --background:           #F5F5F5;
+  --foreground:           #111111;
+  --card:                 #FFFFFF;
+  --card-foreground:      #111111;
+  --popover:              #FFFFFF;
+  --popover-foreground:   #111111;
+  --primary:              #CC0000;
+  --primary-foreground:   #FFFFFF;
+  --secondary:            #1C1C1C;
   --secondary-foreground: #FFFFFF;
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;
-  --accent: #EFF6FF;
-  --accent-foreground: #1D4ED8;
-  --destructive: #DC2626;
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #2563EB;
-  --chart-1: #2563EB;
+  --muted:                #F0F0F0;
+  --muted-foreground:     #6B7280;
+  --accent:               #FFF0F0;
+  --accent-foreground:    #CC0000;
+  --destructive:          #CC0000;
+  --border:               #E5E5E5;
+  --input:                #E5E5E5;
+  --ring:                 #CC0000;
+
+  /* Charts */
+  --chart-1: #CC0000;
   --chart-2: #16A34A;
   --chart-3: #F59E0B;
-  --chart-4: #DC2626;
+  --chart-4: #2563EB;
   --chart-5: #7C3AED;
-  --sidebar: #0F172A;
-  --sidebar-foreground: #E2E8F0;
-  --sidebar-primary: #2563EB;
+
+  /* Sidebar — dark Lear theme */
+  --sidebar:                    #111111;
+  --sidebar-foreground:         #E5E5E5;
+  --sidebar-primary:            #CC0000;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #1E293B;
-  --sidebar-accent-foreground: #F1F5F9;
-  --sidebar-border: #1E293B;
-  --sidebar-ring: #2563EB;
+  --sidebar-accent:             #1C1C1C;
+  --sidebar-accent-foreground:  #F5F5F5;
+  --sidebar-border:             #1C1C1C;
+  --sidebar-ring:               #CC0000;
 }
 
 .dark {
-  --background: #0F172A;
-  --foreground: #F8FAFC;
-  --card: #1E293B;
-  --card-foreground: #F8FAFC;
-  --popover: #1E293B;
-  --popover-foreground: #F8FAFC;
-  --primary: #3B82F6;
-  --primary-foreground: #FFFFFF;
-  --secondary: #334155;
-  --secondary-foreground: #F8FAFC;
-  --muted: #334155;
-  --muted-foreground: #94A3B8;
-  --accent: #1E3A5F;
-  --accent-foreground: #93C5FD;
-  --destructive: #EF4444;
-  --border: #334155;
-  --input: #334155;
-  --ring: #3B82F6;
-  --chart-1: #3B82F6;
+  --background:           #111111;
+  --foreground:           #F5F5F5;
+  --card:                 #1C1C1C;
+  --card-foreground:      #F5F5F5;
+  --popover:              #1C1C1C;
+  --popover-foreground:   #F5F5F5;
+  --primary:              #CC0000;
+  --primary-foreground:   #FFFFFF;
+  --secondary:            #2A2A2A;
+  --secondary-foreground: #F5F5F5;
+  --muted:                #2A2A2A;
+  --muted-foreground:     #9CA3AF;
+  --accent:               #2A0000;
+  --accent-foreground:    #FF6666;
+  --destructive:          #FF3333;
+  --border:               #2A2A2A;
+  --input:                #2A2A2A;
+  --ring:                 #CC0000;
+
+  --chart-1: #FF3333;
   --chart-2: #22C55E;
   --chart-3: #FBBF24;
-  --chart-4: #EF4444;
+  --chart-4: #60A5FA;
   --chart-5: #A78BFA;
-  --sidebar: #020817;
-  --sidebar-foreground: #CBD5E1;
-  --sidebar-primary: #3B82F6;
+
+  --sidebar:                    #0A0A0A;
+  --sidebar-foreground:         #D4D4D4;
+  --sidebar-primary:            #CC0000;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #0F172A;
-  --sidebar-accent-foreground: #F1F5F9;
-  --sidebar-border: #0F172A;
-  --sidebar-ring: #3B82F6;
+  --sidebar-accent:             #1C1C1C;
+  --sidebar-accent-foreground:  #F5F5F5;
+  --sidebar-border:             #1C1C1C;
+  --sidebar-ring:               #CC0000;
 }
 
 @layer base {
@@ -126,41 +149,58 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-inter), 'Inter', sans-serif;
+    font-family: var(--font-geist-sans), var(--font-dm-sans), system-ui, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-syne), var(--font-space-grotesk), sans-serif;
+    font-feature-settings: "ss01", "ss02";
+    letter-spacing: -0.02em;
+  }
+  .font-stat, .stat-value, [data-stat] {
+    font-family: var(--font-space-grotesk), var(--font-geist-sans), sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
   }
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
-}
+/* Font utility classes */
+.font-geist    { font-family: var(--font-geist-sans), sans-serif; }
+.font-syne     { font-family: var(--font-syne), sans-serif; }
+.font-grotesk  { font-family: var(--font-space-grotesk), sans-serif; }
+.font-dm       { font-family: var(--font-dm-sans), sans-serif; }
+.font-serif-display { font-family: var(--font-dm-serif), Georgia, serif; }
+.font-mono     { font-family: var(--font-geist-mono), monospace; }
+.tabular-nums  { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333333; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #CC0000; }
 
 /* Sidebar transition */
 .sidebar-transition {
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Glass card effect */
+/* Glass card */
 .glass-card {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Gradient accent */
-.gradient-accent {
-  background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+/* Lear gradient — red to dark red */
+.gradient-lear {
+  background: linear-gradient(135deg, #CC0000 0%, #7A0000 100%);
+}
+
+/* Lear red glow (for active states, badges) */
+.lear-glow {
+  box-shadow: 0 0 16px 2px rgba(204, 0, 0, 0.35);
 }
 
 /* Hide Next.js error overlay portal */
