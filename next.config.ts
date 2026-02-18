@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import path from "node:path";
 // @ts-ignore
 import withPWA from "next-pwa";
 
@@ -19,7 +18,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  outputFileTracingRoot: path.resolve(__dirname, '../../'),
   typescript: {
     ignoreBuildErrors: true,
   },
