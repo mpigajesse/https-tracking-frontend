@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Download, X, Smartphone } from 'lucide-react';
+import { Download, X, Monitor, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -9,30 +9,40 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+type Platform = 'ios' | 'macos-safari' | 'desktop' | 'mobile';
+
+function detectPlatform(): Platform {
+  const ua = navigator.userAgent;
+  const isIOS = /iphone|ipad|ipod/i.test(ua) && !(window as unknown as { MSStream?: unknown }).MSStream;
+  if (isIOS) return 'ios';
+
+  const isMac = /macintosh/i.test(ua);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  if (isMac && isSafari) return 'macos-safari';
+
+  const isMobile = /android|webos|blackberry|windows phone/i.test(ua);
+  return isMobile ? 'mobile' : 'desktop';
+}
+
 export default function PWAInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [show, setShow] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
+  const [platform, setPlatform] = useState<Platform>('desktop');
   const [installing, setInstalling] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    // Ne pas afficher si déjà installé (mode standalone)
     if (window.matchMedia('(display-mode: standalone)').matches) return;
-    // Ne pas afficher si déjà refusé dans cette session
     if (sessionStorage.getItem('pwa-dismissed')) return;
 
-    // Détection iOS (Safari ne supporte pas beforeinstallprompt)
-    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as unknown as { MSStream?: unknown }).MSStream;
-    setIsIOS(ios);
+    const p = detectPlatform();
+    setPlatform(p);
 
-    if (ios) {
-      // Sur iOS, afficher le guide manuel après 3s
+    if (p === 'ios' || p === 'macos-safari') {
       const t = setTimeout(() => setShow(true), 3000);
       return () => clearTimeout(t);
     }
 
-    // Android / Chrome / Edge
+    // Chrome / Edge — desktop ou mobile Android
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -47,30 +57,33 @@ export default function PWAInstallBanner() {
     setInstalling(true);
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setShow(false);
-    }
+    if (outcome === 'accepted') setShow(false);
     setInstalling(false);
     setDeferredPrompt(null);
   };
 
   const handleDismiss = () => {
-    setDismissed(true);
     setShow(false);
     sessionStorage.setItem('pwa-dismissed', '1');
   };
 
-  if (dismissed) return null;
+  const isDesktop = platform === 'desktop' || platform === 'macos-safari';
+  const needsManualGuide = platform === 'ios' || platform === 'macos-safari';
+
+  // Position : desktop → bas droite ; mobile → bas centré
+  const positionClass = isDesktop
+    ? 'fixed bottom-5 right-5 z-50 w-80'
+    : 'fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-sm';
 
   return (
     <AnimatePresence>
       {show && (
         <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-sm"
+          initial={isDesktop ? { x: 60, opacity: 0 } : { y: 100, opacity: 0 }}
+          animate={isDesktop ? { x: 0, opacity: 1 } : { y: 0, opacity: 1 }}
+          exit={isDesktop ? { x: 60, opacity: 0 } : { y: 100, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+          className={positionClass}
         >
           <div className="bg-[#1C1C1C] border border-[#2A2A2A] rounded-2xl shadow-2xl overflow-hidden">
             {/* Barre rouge en haut */}
@@ -78,12 +91,15 @@ export default function PWAInstallBanner() {
 
             <div className="p-4">
               <div className="flex items-start gap-3">
-                {/* Icône */}
+                {/* Icône — Monitor sur desktop, Smartphone sur mobile */}
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ background: 'linear-gradient(135deg, #CC0000, #7A0000)' }}
                 >
-                  <Smartphone className="w-6 h-6 text-white" />
+                  {isDesktop
+                    ? <Monitor className="w-5 h-5 text-white" />
+                    : <Smartphone className="w-5 h-5 text-white" />
+                  }
                 </div>
 
                 {/* Texte */}
@@ -92,9 +108,10 @@ export default function PWAInstallBanner() {
                     Installer Lear Track
                   </p>
                   <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">
-                    {isIOS
-                      ? 'Appuyez sur  ↑  puis "Sur l\'écran d\'accueil"'
-                      : 'Accès rapide depuis votre écran d\'accueil, même hors connexion'}
+                    {platform === 'ios' && "Appuyez sur ↑ puis « Sur l'écran d'accueil »"}
+                    {platform === 'macos-safari' && "Cliquez sur Partager → « Ajouter au Dock »"}
+                    {platform === 'desktop' && "Accès rapide depuis votre bureau, même hors connexion"}
+                    {platform === 'mobile' && "Accès rapide depuis votre écran d'accueil, même hors connexion"}
                   </p>
                 </div>
 
@@ -102,13 +119,14 @@ export default function PWAInstallBanner() {
                 <button
                   onClick={handleDismiss}
                   className="text-gray-500 hover:text-gray-300 transition-colors flex-shrink-0 -mt-0.5"
+                  aria-label="Fermer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Bouton installer (Android/Chrome uniquement) */}
-              {!isIOS && (
+              {/* Bouton installer (Chrome / Edge desktop ou Android) */}
+              {!needsManualGuide && (
                 <button
                   onClick={handleInstall}
                   disabled={installing}
@@ -120,12 +138,22 @@ export default function PWAInstallBanner() {
                 </button>
               )}
 
-              {/* Guide iOS */}
-              {isIOS && (
+              {/* Guide manuel iOS */}
+              {platform === 'ios' && (
                 <div className="mt-3 flex items-center gap-2 bg-[#111111] rounded-xl px-3 py-2">
-                  <span className="text-lg">↑</span>
+                  <span className="text-base">↑</span>
                   <span className="text-xs text-gray-400">
                     Partager → <span className="text-white font-medium">Sur l'écran d'accueil</span>
+                  </span>
+                </div>
+              )}
+
+              {/* Guide manuel macOS Safari */}
+              {platform === 'macos-safari' && (
+                <div className="mt-3 flex items-center gap-2 bg-[#111111] rounded-xl px-3 py-2">
+                  <span className="text-base">⬆</span>
+                  <span className="text-xs text-gray-400">
+                    Partager → <span className="text-white font-medium">Ajouter au Dock</span>
                   </span>
                 </div>
               )}
