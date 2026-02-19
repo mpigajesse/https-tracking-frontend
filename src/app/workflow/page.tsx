@@ -458,6 +458,142 @@ function LinearFlow({ steps, activeStep, playingStep, onStepClick }: {
 }
 
 /* ─────────────────────────────────────────────
+   Linear flow — light white background version
+───────────────────────────────────────────── */
+function LinearFlowLight({ steps, activeStep, playingStep, onStepClick }: {
+  steps: Step[]; activeStep: string | null; playingStep: number; onStepClick: (id: string) => void;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-0">
+      {steps.map((step, i) => {
+        const actor = ACTORS[step.actor];
+        const phase = PHASES.find(p => p.id === step.phase)!;
+        const Icon = step.icon;
+        const ref = useRef<HTMLDivElement>(null);
+        const inView = useInView(ref, { once: true, margin: '-40px' });
+        const isActive = activeStep === step.id;
+        const isPlaying = playingStep === i;
+
+        return (
+          <div key={step.id} ref={ref} className="flex flex-col items-center w-full max-w-2xl">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={inView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.4, delay: i * 0.05 }}
+              onClick={() => onStepClick(step.id)}
+              className="w-full cursor-pointer rounded-2xl border transition-all duration-300 overflow-hidden"
+              style={{
+                background: isActive
+                  ? `linear-gradient(135deg, ${actor.color}08, #FFFFFF)`
+                  : isPlaying
+                  ? `${actor.color}06`
+                  : '#FFFFFF',
+                borderColor: isActive ? actor.color + '60' : isPlaying ? actor.color + '40' : '#E5E7EB',
+                boxShadow: isActive
+                  ? `0 4px 24px ${actor.color}18`
+                  : isPlaying
+                  ? `0 2px 12px ${actor.color}14`
+                  : '0 1px 4px rgba(0,0,0,0.06)',
+              }}
+              whileHover={{ scale: 1.005, boxShadow: `0 4px 20px ${actor.color}14` }}
+              whileTap={{ scale: 0.998 }}
+            >
+              {/* Top accent bar */}
+              <div className="h-[3px] w-full" style={{ background: isActive || isPlaying ? `linear-gradient(90deg, ${actor.color}, ${actor.color}40)` : `linear-gradient(90deg, ${actor.color}40, transparent)` }} />
+
+              <div className="p-4 flex items-start gap-4">
+                {/* Icon + badge */}
+                <div className="relative flex-shrink-0">
+                  <motion.div className="absolute inset-0 rounded-xl"
+                    style={{ background: actor.color + '15' }}
+                    animate={{ scale: [1, 1.35, 1], opacity: [0.3, 0, 0.3] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeOut', delay: i * 0.15 }} />
+                  <div className="relative w-12 h-12 rounded-xl flex items-center justify-center"
+                    style={{ background: actor.color + '12', border: `1.5px solid ${actor.color}30` }}>
+                    <Icon className="w-5 h-5" style={{ color: actor.color }} />
+                  </div>
+                  {/* Step number badge */}
+                  <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-md"
+                    style={{ background: phase.color }}>
+                    {i + 1}
+                  </div>
+                </div>
+
+                {/* Text */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide"
+                      style={{ background: actor.color + '12', color: actor.color, border: `1px solid ${actor.color}25` }}>
+                      {actor.label}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                      style={{ background: phase.color + '10', color: phase.color, border: `1px solid ${phase.color}25` }}>
+                      Phase {step.phase} — {phase.label}
+                    </span>
+                    {isPlaying && (
+                      <motion.span className="px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"
+                        style={{ background: '#CC000010', color: '#CC0000', border: '1px solid #CC000030' }}
+                        animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 0.8, repeat: Infinity }}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#CC0000] inline-block" />
+                        En cours
+                      </motion.span>
+                    )}
+                  </div>
+                  <div className="text-[#111827] font-bold text-sm" style={{ fontFamily: 'var(--font-syne)' }}>{step.title}</div>
+                  <div className="text-[#6B7280] text-xs mt-0.5">{step.desc}</div>
+                </div>
+
+                <motion.div animate={{ rotate: isActive ? 180 : 0 }} transition={{ duration: 0.2 }} className="flex-shrink-0 text-[#9CA3AF] mt-1">
+                  <ChevronDown className="w-4 h-4" />
+                </motion.div>
+              </div>
+
+              {/* Expanded detail */}
+              <AnimatePresence>
+                {isActive && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22 }} className="overflow-hidden">
+                    <div className="mx-4 mb-4 p-3 rounded-xl border-l-2 text-xs leading-relaxed"
+                      style={{ background: actor.color + '07', borderColor: actor.color, color: '#374151' }}>
+                      <div className="flex gap-2">
+                        <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: actor.color }} />
+                        <span>{step.detail}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+
+            {/* Arrow between steps */}
+            {i < steps.length - 1 && (
+              <div className="flex justify-center items-center my-1" style={{ height: 36 }}>
+                <svg width="24" height="36" viewBox="0 0 24 36" fill="none">
+                  <motion.line x1="12" y1="0" x2="12" y2="22"
+                    stroke={PHASES.find(p => p.id === step.phase)!.color}
+                    strokeWidth="1.5" strokeDasharray="4 3"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={inView ? { pathLength: 1, opacity: 0.6 } : {}}
+                    transition={{ duration: 0.5, delay: i * 0.05 }} />
+                  <motion.polygon points="12,34 6,20 18,20"
+                    fill={PHASES.find(p => p.id === step.phase)!.color}
+                    initial={{ opacity: 0 }} animate={inView ? { opacity: 0.7 } : {}} transition={{ delay: 0.4 + i * 0.05 }} />
+                </svg>
+                {playingStep > i && (
+                  <motion.div className="absolute w-2 h-2 rounded-full"
+                    style={{ background: PHASES.find(p => p.id === step.phase)!.color, boxShadow: `0 0 6px 3px ${PHASES.find(p => p.id === step.phase)!.color}55` }}
+                    animate={{ top: [0, 22], opacity: [0, 1, 1, 0] }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }} />
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
    Animated progress bar
 ───────────────────────────────────────────── */
 function ProgressBar({ current, total, color }: { current: number; total: number; color: string }) {
@@ -640,86 +776,208 @@ export default function WorkflowPage() {
           {viewMode === 'flow' && (
             <motion.div key="flow" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
 
-              {/* ── Schéma visuel compact (desktop) ── */}
-              <div className="hidden lg:block mb-10">
-                <div className="rounded-2xl border border-white/8 overflow-hidden"
-                  style={{ background: 'rgba(10,10,10,0.7)', backdropFilter: 'blur(16px)' }}>
+                {/* ── Schéma visuel compact (desktop) ── */}
+                <div className="hidden lg:block mb-10">
+                  <div className="rounded-2xl border border-[#E5E7EB] overflow-hidden"
+                    style={{ background: '#FFFFFF' }}>
 
-                  {/* Title */}
-                  <div className="px-6 py-4 border-b border-white/8 flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(204,0,0,0.2)' }}>
-                      <GitBranch className="w-4 h-4 text-[#CC0000]" />
+                    {/* Title */}
+                    <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center gap-3"
+                      style={{ background: '#F9FAFB' }}>
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(204,0,0,0.1)' }}>
+                        <GitBranch className="w-4 h-4 text-[#CC0000]" />
+                      </div>
+                      <span className="text-[#111827] font-bold text-sm" style={{ fontFamily: 'var(--font-syne)' }}>
+                        Schéma visuel — Flux complet
+                      </span>
+                      <span className="text-[#9CA3AF] text-xs ml-auto">Cliquez sur un nœud pour plus de détails</span>
                     </div>
-                    <span className="text-white font-bold text-sm" style={{ fontFamily: 'var(--font-syne)' }}>
-                      Schéma visuel — Flux complet
-                    </span>
-                    <span className="text-[#6B7280] text-xs ml-auto">Cliquez sur un nœud pour plus de détails</span>
-                  </div>
 
-                  {/* Phase swimlanes */}
-                  <div className="p-6 space-y-4 overflow-x-auto">
-                    {PHASES.map((phase, pi) => {
-                      const phaseSteps = STEPS.filter(s => s.phase === phase.id);
-                      return (
-                        <div key={phase.id} className="flex items-center gap-0 min-w-0">
-                          {/* Phase label */}
-                          <div className="flex-shrink-0 w-32 pr-3">
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-1.5 h-1.5 rounded-full" style={{ background: phase.color }} />
-                              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: phase.color }}>
-                                {phase.label}
-                              </span>
+                    {/* Phase rows */}
+                    <div className="p-6 space-y-3 overflow-x-auto">
+                      {PHASES.map((phase, pi) => {
+                        const phaseSteps = STEPS.filter(s => s.phase === phase.id);
+                        return (
+                          <div key={phase.id} className="flex items-center min-w-0 rounded-xl py-3 px-4"
+                            style={{ background: phase.color + '07', border: `1px solid ${phase.color}20` }}>
+
+                            {/* Phase label */}
+                            <div className="flex-shrink-0 w-32 pr-4">
+                              <div className="flex flex-col gap-0.5">
+                                <div className="flex items-center gap-1.5">
+                                  <div className="w-2 h-2 rounded-full" style={{ background: phase.color }} />
+                                  <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: phase.color }}>
+                                    Phase {phase.id}
+                                  </span>
+                                </div>
+                                <span className="text-[11px] font-semibold text-[#374151] ml-3.5">{phase.label}</span>
+                              </div>
+                            </div>
+
+                            {/* Separator */}
+                            <div className="w-px self-stretch flex-shrink-0 mr-5 rounded-full opacity-40" style={{ background: phase.color }} />
+
+                            {/* Nodes */}
+                            <div className="flex items-center gap-0 flex-1">
+                              {phaseSteps.map((step, si) => {
+                                const actor = ACTORS[step.actor];
+                                const Icon = step.icon;
+                                const globalIndex = STEPS.indexOf(step);
+                                const isActive = activeStep === step.id;
+                                const isPlaying = playingStep === globalIndex;
+                                return (
+                                  <div key={step.id} className="flex items-center">
+                                    {/* Light node card */}
+                                    <motion.div
+                                      onClick={() => handleStepClick(step.id)}
+                                      className="relative cursor-pointer rounded-xl border transition-all duration-200"
+                                      style={{
+                                        width: 118,
+                                        background: isActive
+                                          ? `linear-gradient(135deg, ${actor.color}15, #fff)`
+                                          : '#FFFFFF',
+                                        borderColor: isActive ? actor.color + '70' : isPlaying ? actor.color + '50' : '#E5E7EB',
+                                        boxShadow: isActive
+                                          ? `0 4px 20px ${actor.color}22`
+                                          : isPlaying
+                                          ? `0 2px 10px ${actor.color}18`
+                                          : '0 1px 3px rgba(0,0,0,0.07)',
+                                      }}
+                                      whileHover={{ y: -2, boxShadow: `0 6px 20px ${actor.color}20` }}
+                                      whileTap={{ scale: 0.97 }}
+                                    >
+                                      {/* Top accent */}
+                                      <div className="h-[3px] w-full rounded-t-xl"
+                                        style={{ background: `linear-gradient(90deg, ${actor.color}, ${actor.color}40)` }} />
+
+                                      <div className="p-3 flex flex-col items-center text-center gap-1.5">
+                                        {/* Badge numéro */}
+                                        <div className="absolute -top-2.5 -left-2.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black text-white shadow-md"
+                                          style={{ background: phase.color }}>
+                                          {globalIndex + 1}
+                                        </div>
+
+                                        {/* Pulse ring */}
+                                        {isPlaying && (
+                                          <motion.div className="absolute inset-0 rounded-xl pointer-events-none"
+                                            style={{ border: `2px solid ${actor.color}` }}
+                                            animate={{ opacity: [0.8, 0.2, 0.8], scale: [1, 1.06, 1] }}
+                                            transition={{ duration: 1.2, repeat: Infinity }} />
+                                        )}
+
+                                        {/* Icon */}
+                                        <div className="relative mt-1">
+                                          <motion.div className="absolute inset-0 rounded-lg"
+                                            style={{ background: actor.color + '20' }}
+                                            animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0, 0.4] }}
+                                            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeOut', delay: globalIndex * 0.18 }} />
+                                          <div className="relative w-9 h-9 rounded-lg flex items-center justify-center"
+                                            style={{ background: actor.color + '12', border: `1.5px solid ${actor.color}30` }}>
+                                            <Icon className="w-4 h-4" style={{ color: actor.color }} />
+                                          </div>
+                                        </div>
+
+                                        {/* Actor pill */}
+                                        <div className="px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wide"
+                                          style={{ background: actor.color + '12', color: actor.color, border: `1px solid ${actor.color}25` }}>
+                                          {actor.label}
+                                        </div>
+
+                                        {/* Title */}
+                                        <div className="text-[#111827] font-bold text-[11px] leading-tight" style={{ fontFamily: 'var(--font-syne)' }}>
+                                          {step.title}
+                                        </div>
+                                        <div className="text-[#9CA3AF] text-[9px] leading-tight">{step.desc}</div>
+                                      </div>
+
+                                      {/* Detail popover */}
+                                      <AnimatePresence>
+                                        {isActive && (
+                                          <motion.div
+                                            initial={{ opacity: 0, y: -6, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-60 rounded-xl border p-3 z-50"
+                                            style={{
+                                              background: '#FFFFFF',
+                                              borderColor: actor.color + '40',
+                                              boxShadow: `0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px ${actor.color}20`,
+                                            }}
+                                          >
+                                            <div className="flex gap-2 text-xs text-[#374151] leading-relaxed">
+                                              <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: actor.color }} />
+                                              <span>{step.detail}</span>
+                                            </div>
+                                            <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 border-l border-t bg-white"
+                                              style={{ borderColor: actor.color + '40' }} />
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </motion.div>
+
+                                    {/* Arrow between nodes */}
+                                    {si < phaseSteps.length - 1 && (
+                                      <div className="flex items-center justify-center relative" style={{ width: 48, height: 24 }}>
+                                        <svg width="48" height="24" viewBox="0 0 48 24" fill="none" className="overflow-visible">
+                                          <motion.line x1="2" y1="12" x2="32" y2="12"
+                                            stroke={phase.color} strokeWidth="1.5" strokeDasharray="4 3"
+                                            initial={{ pathLength: 0, opacity: 0 }}
+                                            animate={{ pathLength: 1, opacity: 0.7 }}
+                                            transition={{ duration: 0.5, delay: si * 0.1 }} />
+                                          <motion.polygon points="44,12 31,6 31,18" fill={phase.color}
+                                            initial={{ opacity: 0 }} animate={{ opacity: 0.9 }} transition={{ delay: 0.4 + si * 0.1 }} />
+                                        </svg>
+                                        {/* Animated dot */}
+                                        {playingStep >= globalIndex && (
+                                          <motion.div className="absolute rounded-full" style={{ width: 7, height: 7, background: phase.color, boxShadow: `0 0 7px 3px ${phase.color}55`, top: '50%', marginTop: -3.5, left: 2 }}
+                                            animate={{ left: [2, 34], opacity: [0, 1, 1, 0] }}
+                                            transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.3 }} />
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+
+                              {/* Inter-phase arrow */}
+                              {pi < PHASES.length - 1 && (
+                                <div className="flex items-center ml-3 gap-1">
+                                  <div className="flex flex-col items-center gap-0.5 opacity-60">
+                                    <span className="text-[8px] font-bold uppercase tracking-wider whitespace-nowrap" style={{ color: PHASES[pi + 1].color }}>
+                                      → Ph. {phase.id + 1}
+                                    </span>
+                                    <svg width="36" height="16" viewBox="0 0 36 16" fill="none">
+                                      <motion.line x1="2" y1="8" x2="24" y2="8"
+                                        stroke="#D1D5DB" strokeWidth="1.5" strokeDasharray="3 3"
+                                        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.4, delay: pi * 0.15 }} />
+                                      <motion.polygon points="33,8 22,3 22,13" fill="#D1D5DB"
+                                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} />
+                                    </svg>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
-
-                          {/* Separator line */}
-                          <div className="w-px h-16 flex-shrink-0 mr-4 opacity-20 rounded-full" style={{ background: phase.color }} />
-
-                          {/* Nodes */}
-                          <div className="flex items-center gap-0 flex-1">
-                            {phaseSteps.map((step, si) => (
-                              <div key={step.id} className="flex items-center">
-                                <Node
-                                  step={step}
-                                  index={STEPS.indexOf(step)}
-                                  isActive={activeStep === step.id}
-                                  isPlaying={playingStep === STEPS.indexOf(step)}
-                                  onClick={() => handleStepClick(step.id)}
-                                />
-                                {si < phaseSteps.length - 1 && (
-                                  <Arrow color={phase.color} active={playingStep >= STEPS.indexOf(step)} />
-                                )}
-                              </div>
-                            ))}
-
-                            {/* Transition to next phase */}
-                            {pi < PHASES.length - 1 && (
-                              <div className="flex items-center ml-4">
-                                <div className="flex flex-col items-center gap-1">
-                                  <div className="text-[9px] text-[#4B5563] uppercase tracking-wider font-bold whitespace-nowrap">
-                                    Phase {phase.id + 1}
-                                  </div>
-                                  <Arrow color="#3A3A3A" active={playingStep >= STEPS.filter(s => s.phase <= phase.id).length - 1} />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
 
               {/* ── Linear flow (all screens) ── */}
-              <div className="rounded-2xl border border-white/8 overflow-hidden"
-                style={{ background: 'rgba(10,10,10,0.7)', backdropFilter: 'blur(16px)' }}>
-                <div className="px-6 py-4 border-b border-white/8 flex items-center gap-3">
-                  <span className="text-white font-bold text-sm" style={{ fontFamily: 'var(--font-syne)' }}>Flux détaillé — 10 étapes</span>
+              <div className="rounded-2xl border border-[#E5E7EB] overflow-hidden"
+                style={{ background: '#FFFFFF' }}>
+                <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center gap-3"
+                  style={{ background: '#F9FAFB' }}>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(204,0,0,0.1)' }}>
+                    <GitBranch className="w-4 h-4 text-[#CC0000]" />
+                  </div>
+                  <span className="text-[#111827] font-bold text-sm" style={{ fontFamily: 'var(--font-syne)' }}>Flux détaillé — 10 étapes</span>
                   <span className="text-[#6B7280] text-xs ml-auto hidden sm:inline">Cliquez pour voir les détails</span>
                 </div>
-                <div className="p-4 md:p-8">
-                  <LinearFlow steps={STEPS} activeStep={activeStep} playingStep={playingStep} onStepClick={handleStepClick} />
+                <div className="p-4 md:p-8" style={{ background: '#FFFFFF' }}>
+                  <LinearFlowLight steps={STEPS} activeStep={activeStep} playingStep={playingStep} onStepClick={handleStepClick} />
                 </div>
               </div>
             </motion.div>
