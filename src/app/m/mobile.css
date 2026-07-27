@@ -1,0 +1,100 @@
+/**
+ * Feuille de l'application mobile.
+ *
+ * Volontairement minimale : le design vient des mêmes utilitaires Tailwind et
+ * des mêmes tokens (`globals.css`) que l'application web, pour que les deux
+ * surfaces évoluent ensemble. Ne restent ici que les contraintes propres au
+ * mobile — cadre, encoches, zones tactiles.
+ */
+
+/* ── Palette sombre (référence) ─────────────────────────────────────────
+   Alignée sur les tokens `.dark` de globals.css et sur la sidebar web.
+   Aucune teinte ardoise (#1E293B / #334155) : la charte Lear est un
+   quasi-noir neutre, le bleuté jurait avec le rouge de marque.
+
+     #0A0A0A  fond de l'appareil (sidebar, extrémités du dégradé)
+     #111111  fond de page et chrome (topbar, barre de navigation)
+     #1C1C1C  cartes et surfaces élevées      → --card
+     #2A2A2A  bordures, surfaces neutres      → --border / --muted
+     #CC0000  action primaire                 → --primary
+     #FF6666  rouge lisible sur fond sombre   → --accent-foreground
+     #2A0000  fond d'alerte discret           → --accent
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* ── Cadre ──────────────────────────────────────────────────────────────
+   Sur écran large, l'app est présentée comme un appareil posé sur le fond
+   sombre de la sidebar web (--sidebar). La trame en pointillés évite l'aplat
+   numérique parfait et rappelle la texture d'un poste industriel. */
+
+.mobile-app {
+  min-height: 100dvh;
+  /* Dégradé exact de la sidebar web (#0A0A0A → #111111 → #0A0A0A), surmonté
+     de la trame. Le cadre de l'appareil se détache ainsi du fond. */
+  background-color: #0a0a0a;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.07) 1px, transparent 0),
+    linear-gradient(to bottom, #0a0a0a 0%, #111111 50%, #0a0a0a 100%);
+  background-size: 5px 5px, 100% 100%;
+}
+
+/* Colonne unique centrée : l'app est mobile-only, elle ne se réorganise pas
+   en desktop. Hauteur pleine — la barre de navigation est en position fixe,
+   toute marge verticale la ferait sortir du cadre. */
+.m-viewport {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 481px) {
+  .m-viewport {
+    border-inline: 1px solid #2a2a2a;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 24px 70px -20px rgba(0, 0, 0, 0.9);
+  }
+}
+
+/* Réserve la place de la barre de navigation et de la zone gestuelle iOS. */
+.m-scroll {
+  flex: 1;
+  padding-bottom: calc(72px + env(safe-area-inset-bottom) + 24px);
+  overflow-x: hidden;
+}
+
+.m-safe-top {
+  padding-top: calc(env(safe-area-inset-top) + 0.875rem);
+}
+
+.m-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Supprime le flash bleu au tap sur Android / iOS. */
+.mobile-app button,
+.mobile-app a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Chiffres alignés pour les chronomètres et les durées. */
+.m-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Trame appliquée à une surface : viseur de scan, en-têtes d'appareil. */
+.m-trame {
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0);
+  background-size: 4px 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-app *,
+  .mobile-app *::before,
+  .mobile-app *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

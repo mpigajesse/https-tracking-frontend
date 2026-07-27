@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BPMN — Cycle de vie d'une session de pointage · Lear</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b1220;
+    --bg2:#0e1729;
+    --panel:#111c33;
+    --panel2:#0d1729;
+    --line:#28374f;
+    --line-soft:#1c2942;
+    --ink:#eaf0fb;
+    --muted:#8c9cbd;
+    --muted2:#5f6f92;
+    --signal:#ffb63d;     /* jeton / actif */
+    --signal-dim:#7a5a1f;
+    --valid:#3ad9a6;      /* validé */
+    --alert:#ff5468;      /* refus / alerte */
+    --interim:#5db4ff;    /* lane intérimaire */
+    --systeme:#a98bff;    /* lane système */
+    --valideur:#ffca6b;   /* lane valideur */
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:
+      radial-gradient(1200px 600px at 15% -10%, #16233f 0%, transparent 55%),
+      radial-gradient(1000px 500px at 95% 0%, #14203a 0%, transparent 50%),
+      var(--bg);
+    color:var(--ink);font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+
+  .wrap{max-width:1320px;margin:0 auto;padding:26px 22px 60px}
+
+  /* ---------- HEADER ---------- */
+  header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;
+    padding-bottom:18px;border-bottom:1px solid var(--line-soft)}
+  .brand{display:flex;align-items:center;gap:14px}
+  .mark{width:44px;height:44px;border-radius:12px;flex:0 0 auto;
+    background:linear-gradient(135deg,#ff3b3b,#c81212);position:relative;
+    box-shadow:0 6px 22px rgba(200,20,20,.35), inset 0 1px 0 rgba(255,255,255,.25)}
+  .mark::after{content:"L";position:absolute;inset:0;display:grid;place-items:center;
+    font-family:"Space Grotesk";font-weight:700;font-size:24px;color:#fff}
+  h1{font-family:"Space Grotesk";font-weight:600;font-size:20px;letter-spacing:-.01em;margin:0 0 3px}
+  .sub{color:var(--muted);font-size:13px;letter-spacing:.01em}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .chipmeta{font-family:"IBM Plex Mono";font-size:11px;color:var(--muted);
+    border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:rgba(255,255,255,.02)}
+  .chipmeta b{color:var(--ink);font-weight:600}
+
+  /* ---------- CONTROLS ---------- */
+  .console-bar{margin-top:20px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+  .scen{display:flex;gap:8px;flex-wrap:wrap}
+  .scen button{font-family:"Space Grotesk";font-weight:500;font-size:12.5px;letter-spacing:.01em;
+    color:var(--muted);background:var(--panel);border:1px solid var(--line);
+    padding:9px 14px;border-radius:10px;cursor:pointer;transition:.18s;display:flex;align-items:center;gap:8px}
+  .scen button .dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.7}
+  .scen button:hover{color:var(--ink);border-color:#3a4c6d}
+  .scen button.active{color:#0b1220;background:var(--signal);border-color:var(--signal);
+    box-shadow:0 4px 18px rgba(255,182,61,.28)}
+  .scen button.s2.active{background:var(--alert);border-color:var(--alert);box-shadow:0 4px 18px rgba(255,84,104,.28)}
+  .scen button.s3.active{background:var(--alert);border-color:var(--alert);box-shadow:0 4px 18px rgba(255,84,104,.28)}
+  .scen button.s4.active{background:var(--interim);border-color:var(--interim);box-shadow:0 4px 18px rgba(93,180,255,.28)}
+
+  .transport{display:flex;gap:8px;align-items:center}
+  .tbtn{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;cursor:pointer;
+    background:var(--panel);border:1px solid var(--line);color:var(--ink);transition:.15s}
+  .tbtn:hover{border-color:#3a4c6d;background:#16233c}
+  .tbtn.play{width:auto;padding:0 16px;gap:9px;font-family:"Space Grotesk";font-weight:600;font-size:13px;
+    background:var(--signal);color:#0b1220;border-color:var(--signal)}
+  .tbtn.play:hover{filter:brightness(1.05)}
+  .tbtn svg{width:16px;height:16px;fill:currentColor}
+  .speed{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;
+    font-family:"IBM Plex Mono"}
+  .speed input{accent-color:var(--signal);width:96px}
+
+  /* ---------- STAGE ---------- */
+  .stage{margin-top:16px;border:1px solid var(--line-soft);border-radius:var(--radius);
+    background:linear-gradient(180deg,var(--bg2),var(--panel2));overflow:hidden;
+    box-shadow:0 24px 60px -30px rgba(0,0,0,.8)}
+  .scroller{overflow-x:auto;overflow-y:hidden}
+  .scroller::-webkit-scrollbar{height:10px}
+  .scroller::-webkit-scrollbar-thumb{background:#243350;border-radius:8px}
+  .scroller::-webkit-scrollbar-track{background:transparent}
+  svg#canvas{display:block}
+
+  /* svg node styles applied via classes/attrs in JS */
+  .laneBand{opacity:.5}
+  .laneLabel{font-family:"Space Grotesk";font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+  .flowbase{fill:none;stroke:var(--line);stroke-width:2}
+  .flowbase.dim{stroke:#1a2740}
+  .flowlabel{font-family:"IBM Plex Mono";font-size:10.5px;fill:var(--muted)}
+  .flowlabel.err{fill:#ff8a97}
+  .flowlabel.yes{fill:#63e3bd}
+  .flow-hi{fill:none;stroke:var(--signal);stroke-width:3.4;filter:drop-shadow(0 0 6px rgba(255,182,61,.6))}
+
+  .node{cursor:pointer}
+  .node .box{transition:.25s}
+  .node text{font-family:"Space Grotesk";font-weight:500;pointer-events:none}
+  .node .stat{font-family:"IBM Plex Mono";font-weight:500}
+  .node.dim{opacity:.34}
+  .node.done .box{stroke-opacity:.9}
+  .node.active .box{filter:drop-shadow(0 0 10px rgba(255,182,61,.55))}
+  .node.hidden{display:none}
+
+  .token{filter:drop-shadow(0 0 8px rgba(255,182,61,.9))}
+
+  /* ---------- BELOW: panel + console ---------- */
+  .grid{margin-top:16px;display:grid;grid-template-columns:1.05fr .95fr;gap:16px}
+  .card{border:1px solid var(--line-soft);border-radius:var(--radius);background:var(--panel2);padding:18px 20px}
+  .card h3{font-family:"Space Grotesk";font-weight:600;font-size:12px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--muted);margin:0 0 14px;display:flex;align-items:center;gap:9px}
+  .card h3 .idx{font-family:"IBM Plex Mono";color:var(--signal)}
+
+  .step-title{font-family:"Space Grotesk";font-weight:600;font-size:19px;line-height:1.25;margin:2px 0 6px;letter-spacing:-.01em}
+  .step-actor{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-bottom:14px;
+    font-family:"IBM Plex Mono"}
+  .step-actor .pip{width:9px;height:9px;border-radius:3px}
+  .step-desc{color:#c6d1e8;font-size:14.5px;line-height:1.6}
+  .status-badge{margin-top:16px;display:inline-flex;align-items:center;gap:9px;
+    font-family:"IBM Plex Mono";font-size:12.5px;padding:8px 13px;border-radius:9px;
+    border:1px solid var(--line);background:rgba(255,255,255,.02)}
+  .status-badge .lbl{color:var(--muted2)}
+  .status-badge .val{color:var(--ink);font-weight:600}
+  .status-badge .led{width:9px;height:9px;border-radius:50%;background:var(--signal);box-shadow:0 0 8px currentColor;color:var(--signal)}
+
+  .console{background:#070d18;border-radius:10px;border:1px solid var(--line-soft);
+    padding:14px 16px;height:236px;overflow-y:auto;font-family:"IBM Plex Mono";font-size:12.5px;line-height:1.85}
+  .console::-webkit-scrollbar{width:8px}
+  .console::-webkit-scrollbar-thumb{background:#22314c;border-radius:8px}
+  .logline{display:flex;gap:12px;opacity:0;transform:translateY(4px);animation:pop .3s forwards}
+  @keyframes pop{to{opacity:1;transform:none}}
+  .logline .t{color:var(--signal);flex:0 0 auto}
+  .logline .m{color:#aebbd6}
+  .logline.err .m{color:#ff8a97}
+  .logline.ok .m{color:#63e3bd}
+  .console .cursor{color:var(--muted2)}
+
+  /* legend */
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding:12px 4px 0;border-top:1px solid var(--line-soft)}
+  .legend .li{display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--muted);font-family:"IBM Plex Mono"}
+  .legend svg{flex:0 0 auto}
+
+  .foot{margin-top:24px;color:var(--muted2);font-size:11.5px;font-family:"IBM Plex Mono";
+    display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line-soft);padding-top:16px}
+
+  @media (max-width:880px){
+    .grid{grid-template-columns:1fr}
+    header.top{flex-direction:column}
+    .console-bar{flex-direction:column;align-items:stretch}
+    .transport{justify-content:space-between}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.001ms !important;transition-duration:.001ms !important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="mark" aria-hidden="true"></div>
+      <div>
+        <h1>Cycle de vie d'une session de pointage</h1>
+        <div class="sub">Application intérim multi-sites — modèle BPMN animé · double validation scan + humain</div>
+      </div>
+    </div>
+    <div class="meta">
+      <span class="chipmeta">Réf. <b>CDC-POINT-2026-V1.0</b></span>
+      <span class="chipmeta"><b>5</b> sites</span>
+      <span class="chipmeta"><b>3</b> couloirs · <b>4</b> profils</span>
+    </div>
+  </header>
+
+  <div class="console-bar">
+    <div class="scen" role="tablist" aria-label="Scénarios">
+      <button class="s1 active" data-scen="s1"><span class="dot"></span>Nominal</button>
+      <button class="s2" data-scen="s2"><span class="dot"></span>Timeout pause</button>
+      <button class="s3" data-scen="s3"><span class="dot"></span>Refus / anti-fraude</button>
+      <button class="s4" data-scen="s4"><span class="dot"></span>Clôture auto 23:30</button>
+    </div>
+    <div class="transport">
+      <button class="tbtn" id="prev" title="Étape précédente" aria-label="Étape précédente"><svg viewBox="0 0 24 24"><path d="M15 5v14l-9-7z M7 5h2v14H7z"/></svg></button>
+      <button class="tbtn play" id="play" aria-label="Lecture"><svg id="playicon" viewBox="0 0 24 24"><path d="M7 5v14l12-7z"/></svg><span id="playtxt">Lancer</span></button>
+      <button class="tbtn" id="next" title="Étape suivante" aria-label="Étape suivante"><svg viewBox="0 0 24 24"><path d="M9 5v14l9-7z M15 5h2v14h-2z"/></svg></button>
+      <button class="tbtn" id="restart" title="Recommencer" aria-label="Recommencer"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg></button>
+      <span class="speed">Vitesse<input id="speed" type="range" min="0.5" max="2" step="0.25" value="1"><span id="speedv">1×</span></span>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="scroller" id="scroller">
+      <svg id="canvas" width="2200" height="700" viewBox="0 0 2200 700" role="img"
+           aria-label="Diagramme BPMN du cycle de vie d'une session de pointage"></svg>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="li"><svg width="26" height="18"><circle cx="9" cy="9" r="7" fill="none" stroke="#63e3bd" stroke-width="2"/></svg>Événement début / fin</span>
+    <span class="li"><svg width="26" height="18"><rect x="2" y="3" width="22" height="12" rx="3" fill="none" stroke="#8c9cbd" stroke-width="2"/></svg>Tâche</span>
+    <span class="li"><svg width="26" height="18"><path d="M13 2l7 7-7 7-7-7z" fill="none" stroke="#8c9cbd" stroke-width="2"/></svg>Décision (passerelle XOR)</span>
+    <span class="li"><svg width="26" height="18"><circle cx="9" cy="9" r="7" fill="none" stroke="#ffb63d" stroke-width="2" stroke-dasharray="3 3"/></svg>Événement minuterie</span>
+    <span class="li"><svg width="30" height="18"><line x1="2" y1="9" x2="26" y2="9" stroke="#ff5468" stroke-width="2" stroke-dasharray="5 4"/></svg>Flux d'exception</span>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3><span class="idx" id="stepno">00</span> Étape en cours</h3>
+      <div class="step-title" id="stTitle">Prêt à démarrer</div>
+      <div class="step-actor" id="stActor"><span class="pip" style="background:var(--signal)"></span>Sélectionnez un scénario puis « Lancer »</div>
+      <div class="step-desc" id="stDesc">Le jeton lumineux suit le fil du processus, couloir par couloir. Cliquez sur n'importe quel nœud pour lire son détail, ou avancez pas à pas.</div>
+      <div class="status-badge"><span class="led" id="stLed"></span><span class="lbl">Statut session :</span><span class="val" id="stStatus">—</span></div>
+    </div>
+
+    <div class="card">
+      <h3><span class="idx">LOG</span> Journal d'audit horodaté</h3>
+      <div class="console" id="console">
+        <div class="logline" style="animation:none;opacity:1;transform:none"><span class="t">--:--:--</span><span class="m cursor">en attente de lancement…</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>BPMN dérivé du RS Lear — sections 3 (profils), 4 (sessions &amp; pauses). Document confidentiel.</span>
+    <span>Horodatage serveur · token de scan valide 2 min · double contrôle</span>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("canvas");
+
+  /* ---------------- geometry constants ---------------- */
+  const TASK_W = 142, TASK_H = 64, GATE = 34, EV = 27;
+  const LANES = [
+    {id:"interim",  label:"Intérimaire",              y0:40,  y1:206, color:"var(--interim)",  raw:"#5db4ff"},
+    {id:"systeme",  label:"Système",                  y0:206, y1:452, color:"var(--systeme)",  raw:"#a98bff"},
+    {id:"valideur", label:"Technicien / Réceptionniste", y0:452, y1:700, color:"var(--valideur)", raw:"#ffca6b"}
+  ];
+  const laneRaw = id => LANES.find(l=>l.id===id).raw;
+
+  /* ---------------- nodes ---------------- */
+  // scen: which scenarios display this node
+  const N = {
+    start1:   {x:70,  y:122, lane:"interim", type:"start", label:"Arrivée\nsur site", scen:["s1","s2","s3","s4"]},
+    scanIn:   {x:210, y:122, lane:"interim", type:"task",  label:"Scanne son\nQR Code (entrée)", scen:["s1","s2","s3","s4"]},
+    verify:   {x:360, y:315, lane:"systeme", type:"task",  label:"Vérifie QR +\ncontrôles auto.", scen:["s1","s2","s3","s4"]},
+    gCtrl:    {x:520, y:315, lane:"systeme", type:"gate",  label:"Contrôles\nOK ?", scen:["s1","s2","s3","s4"]},
+    refuse1:  {x:520, y:410, lane:"systeme", type:"end-err", label:"Accès\nrefusé", scen:["s3"]},
+    create:   {x:670, y:315, lane:"systeme", type:"task",  label:"Crée session\n« En attente »", scen:["s1","s2","s3","s4"]},
+    notif1:   {x:670, y:531, lane:"valideur",type:"task",  label:"Notifie valideur\n(photo + infos)", scen:["s1","s2","s3","s4"]},
+    gId:      {x:830, y:531, lane:"valideur",type:"gate",  label:"Identité\nvalidée ?", scen:["s1","s2","s3","s4"]},
+    refuse2:  {x:830, y:626, lane:"valideur",type:"end-err", label:"Refus\n(motif obl.)", scen:["s3"]},
+    open:     {x:880, y:315, lane:"systeme", type:"task",  label:"Session OUVERTE\n(horodatage déf.)", scen:["s1","s2","s4"]},
+    confirm:  {x:880, y:122, lane:"interim", type:"task",  label:"Confirmation\nà l'intérimaire", scen:["s1","s2","s4"]},
+    scanBreak:{x:1030,y:122, lane:"interim", type:"task",  label:"Scanne QR\ndépart pause", scen:["s1","s2"]},
+    startBreak:{x:1160,y:315,lane:"systeme", type:"task",  label:"Début pause\n+ timeout 40 min", scen:["s1","s2"]},
+    gReturn:  {x:1300,y:315, lane:"systeme", type:"gate",  label:"Retour\n< 40 min ?", scen:["s1","s2"]},
+    scanReturn:{x:1300,y:122,lane:"interim", type:"task",  label:"Scanne\nretour pause", scen:["s1","s2"]},
+    calcBreak:{x:1460,y:315, lane:"systeme", type:"task",  label:"Calcule durée\nStatut « En cours »", scen:["s1","s2"]},
+    // timeout cluster (s2)
+    timeoutAlert:{x:1360,y:531,lane:"valideur",type:"task",label:"Alerte TIMEOUT\n« pause dépassée »", scen:["s2"]},
+    gOptions: {x:1520,y:531, lane:"valideur",type:"gate",  label:"Décision\nTechnicien", scen:["s2"]},
+    optClose: {x:1520,y:626, lane:"valideur",type:"task",  label:"A · Fermer\n(fin = début pause)", scen:["s2"]},
+    optExtend:{x:1360,y:626, lane:"valideur",type:"task",  label:"B · Prolonger\n(+10/20/30 min)", scen:["s2"]},
+    optManual:{x:1670,y:626, lane:"valideur",type:"task",  label:"C · Retour manuel\n(justif. obl.)", scen:["s2"]},
+    endEarly: {x:1690,y:531, lane:"valideur",type:"end",   label:"Clôturée\n(flag À vérifier)", scen:["s2"]},
+    // nominal closing (s1)
+    scanOut:  {x:1560,y:122, lane:"interim", type:"task",  label:"Scanne QR\nsortie", scen:["s1"]},
+    verifyOut:{x:1710,y:315, lane:"systeme", type:"task",  label:"Vérifie session\n+ cohérence", scen:["s1"]},
+    notif2:   {x:1710,y:531, lane:"valideur",type:"task",  label:"Notifie clôture\n(durée calculée)", scen:["s1"]},
+    gClose:   {x:1855,y:531, lane:"valideur",type:"gate",  label:"Valider\nclôture ?", scen:["s1"]},
+    anomaly:  {x:1855,y:626, lane:"valideur",type:"task",  label:"Anomalie\n« En litige »", scen:["s1"]},
+    calcFinal:{x:1905,y:315, lane:"systeme", type:"task",  label:"Temps réel =\nfin−début−Σpauses", scen:["s1"]},
+    end1:     {x:2035,y:315, lane:"systeme", type:"end",   label:"CLÔTURÉE /\nVALIDÉE", scen:["s1"]},
+    // auto closing (s4)
+    autoTimer:{x:990, y:531, lane:"valideur",type:"timer", label:"23:30 — jour\ncomptable clos", scen:["s4"]},
+    autoClose:{x:1150,y:531, lane:"valideur",type:"task",  label:"Clôture forcée\nflag « À vérifier »", scen:["s4"]},
+    autoEnd:  {x:1300,y:531, lane:"valideur",type:"end",   label:"Clôturée\nautomatiquement", scen:["s4"]}
+  };
+
+  /* per-node rich detail: title, desc, session status, log line */
+  const D = {
+    start1:{t:"Arrivée sur site",d:"L'intérimaire se présente physiquement sur l'un des 5 sites, avant sa prise de poste. Il a au préalable récupéré son QR Code de session dans son espace personnel.",s:"—",log:null},
+    scanIn:{t:"Scan du QR Code — entrée",d:"L'intérimaire présente son QR Code (affiché dans l'app ou imprimé) sur un terminal fixe ou au poste. Le QR contient, chiffrés, l'ID intérim, le site, l'expiration et un jeton anti-duplication.",s:"En attente (ouverture)",log:{t:"08:02:11",m:"SCAN entrée — QR #INT-4821 · site Casablanca-2",c:""}},
+    verify:{t:"Contrôles automatiques du système",d:"Le système vérifie la validité du QR, le statut actif de l'intérimaire, l'absence de session déjà ouverte et la cohérence site / affectation.",s:"Contrôle système…",log:{t:"08:02:11",m:"Contrôles: QR valide · statut actif · aucune session ouverte",c:"ok"}},
+    gCtrl:{t:"Passerelle — contrôles OK ?",d:"Point de décision exclusif (XOR). Si un seul contrôle échoue, la demande est refusée et la session annulée. Sinon, une session « En attente (ouverture) » est créée avec horodatage serveur.",s:"Contrôle système…",log:null},
+    refuse1:{t:"Accès refusé",d:"Un contrôle a échoué (QR expiré, intérimaire inactif, session déjà ouverte, mauvais site). La session est annulée et le refus notifié.",s:"Annulée / Refusée",log:{t:"08:02:12",m:"REFUS — contrôle échoué · session annulée",c:"err"}},
+    create:{t:"Création de la session",d:"Le système crée l'enregistrement de session au statut « En attente (ouverture) », horodaté côté serveur (non falsifiable depuis le terminal).",s:"En attente (ouverture)",log:{t:"08:02:12",m:"Session #S-90233 créée — horodatage serveur",c:""}},
+    notif1:{t:"Notification au valideur",d:"Le Technicien ou le Réceptionniste reçoit en temps réel une demande d'ouverture avec la photo et les informations de l'intérimaire pour le contrôle d'identité.",s:"En attente (ouverture)",log:{t:"08:02:12",m:"Notification → Technicien (photo + infos du jour)",c:""}},
+    gId:{t:"Passerelle — identité validée ?",d:"Contrôle humain : correspondance photo / personne, CIN valide, assurance à jour. C'est la moitié « humaine » de la double validation anti-fraude.",s:"Vérification identité…",log:{t:"08:02:20",m:"Vérification visuelle identité (photo / personne)",c:""}},
+    refuse2:{t:"Refus à la validation",d:"L'identité ou les documents ne correspondent pas. Le valideur refuse ; un motif est obligatoire et le Technicien est notifié. Tout est journalisé.",s:"Annulée / Refusée",log:{t:"08:02:25",m:"REFUS identité — motif obligatoire enregistré",c:"err"}},
+    open:{t:"Session ouverte",d:"Le valideur approuve. Le système fige l'horodatage d'ouverture définitif. La session passe au statut « Ouverte / En cours ».",s:"Ouverte / En cours",log:{t:"08:02:31",m:"Session OUVERTE — validée par Technicien",c:"ok"}},
+    confirm:{t:"Confirmation à l'intérimaire",d:"L'intérimaire reçoit une confirmation : « Votre session a été ouverte par [Technicien] à 08:02 ». La réception est également notifiée de l'arrivée.",s:"Ouverte / En cours",log:{t:"08:02:31",m:"Intérimaire notifié : « Session ouverte à 08:02 »",c:""}},
+    scanBreak:{t:"Départ en pause",d:"Au poste Réceptionniste, l'intérimaire scanne son QR de session pour signaler son départ en pause. La traçabilité des pauses conditionne le calcul du temps réel.",s:"En pause",log:{t:"12:00:35",m:"SCAN départ pause (poste Réceptionniste)",c:""}},
+    startBreak:{t:"Début de pause + minuterie",d:"Le système enregistre le début de pause (12:00:35) et arme un timeout de 40 min. Échéance de retour calculée : 12:40:35. Statut → « En pause ».",s:"En pause",log:{t:"12:00:35",m:"Pause démarrée · timeout 40 min → retour < 12:40:35",c:""}},
+    gReturn:{t:"Passerelle — retour < 40 min ?",d:"Le système surveille l'échéance. Deux issues : retour dans les temps (reprise), ou dépassement du timeout (processus d'alerte automatique).",s:"En pause",log:null},
+    scanReturn:{t:"Retour de pause",d:"L'intérimaire re-scanne au poste avant l'échéance. Le système horodate le retour (12:35:20).",s:"Ouverte / En cours",log:{t:"12:35:20",m:"SCAN retour pause",c:""}},
+    calcBreak:{t:"Calcul de la durée de pause",d:"Durée réelle de pause calculée automatiquement (34 min 45 s). La session repasse au statut « Ouverte / En cours ».",s:"Ouverte / En cours",log:{t:"12:35:20",m:"Durée pause = 34 min 45 s · reprise",c:"ok"}},
+    timeoutAlert:{t:"Alerte timeout dépassé",d:"À T+40 min sans retour, statut → « En pause — Timeout dépassé ». Alerte immédiate au Technicien et au Réceptionniste, avec l'heure de départ (12:00).",s:"En pause — Timeout dépassé",log:{t:"12:40:35",m:"ALERTE timeout — pas de retour · départ pause 12:00",c:"err"}},
+    gOptions:{t:"Décision du Technicien",d:"Le système propose une clôture automatique. Le Technicien tranche entre 3 options : fermer, prolonger le délai, ou saisir un retour manuel.",s:"En pause — Timeout dépassé",log:{t:"12:41:00",m:"Décision Technicien requise (A / B / C)",c:""}},
+    optClose:{t:"Option A — Fermer la session",d:"Le Technicien valide la clôture. Le système fixe la fin de session à l'heure de départ en pause (12:00), déduit les pauses précédentes, et ajoute un flag « Fermeture anticipée — Timeout pause ».",s:"Clôturée (Timeout pause)",log:{t:"12:41:10",m:"Option A — clôture · fin = 12:00 · flag « À vérifier »",c:"err"}},
+    optExtend:{t:"Option B — Prolonger le délai",d:"Le Technicien accorde 10, 20 ou 30 min supplémentaires (configurable). Le système recalcule l'échéance et poursuit la surveillance ; nouvelle alerte si toujours pas de retour.",s:"En pause",log:{t:"12:41:10",m:"Option B — délai +20 min → nouvelle échéance 13:00:35",c:""}},
+    optManual:{t:"Option C — Retour manuel",d:"Si l'intérimaire est revenu sans scanner (oubli / panne), le Technicien saisit l'heure de retour réelle avec un commentaire de justification obligatoire, journalisé dans l'audit.",s:"Ouverte / En cours",log:{t:"12:55:00",m:"Option C — retour manuel saisi · justification loggée",c:""}},
+    endEarly:{t:"Clôture (timeout pause)",d:"La session est définitivement close suite au timeout, avec un flag « À vérifier » pour contrôle a posteriori et fiabilité de la facturation.",s:"Clôturée (À vérifier)",log:{t:"12:41:10",m:"Session close (Timeout pause) — flag À vérifier",c:"err"}},
+    scanOut:{t:"Scan de sortie",d:"En fin de journée, l'intérimaire re-scanne son QR sur le chemin de sortie. La session passe en « En attente (clôture) ».",s:"En attente (clôture)",log:{t:"17:00:04",m:"SCAN sortie",c:""}},
+    verifyOut:{t:"Vérification de sortie",d:"Le système vérifie l'existence d'une session ouverte et la cohérence de la durée avant de solliciter la validation.",s:"En attente (clôture)",log:{t:"17:00:04",m:"Session ouverte confirmée · cohérence durée",c:"ok"}},
+    notif2:{t:"Notification de clôture",d:"Le valideur reçoit la demande de clôture avec la durée brute calculée (9h00). Il peut valider, corriger manuellement l'heure, ou signaler une anomalie.",s:"En attente (clôture)",log:{t:"17:00:05",m:"Notification clôture → 9h00 brut calculé",c:""}},
+    gClose:{t:"Passerelle — valider la clôture ?",d:"Décision du valideur. Validation → calcul du temps réel. Anomalie (durée > 12 h, double scan, incohérence) → statut « En litige ».",s:"En attente (clôture)",log:null},
+    anomaly:{t:"Anomalie — En litige",d:"Le valideur signale une incohérence. La session bascule « En litige » pour traitement, avant toute finalisation vers la paie / facturation.",s:"En litige",log:{t:"17:00:20",m:"Anomalie signalée — session En litige",c:"err"}},
+    calcFinal:{t:"Calcul du temps réel",d:"Temps payable = (fin − début) − Σ durées de pause. Exemple : 9h00 brut − 0h45 de pauses = 8h15.",s:"Clôturée / Validée",log:{t:"17:00:21",m:"Temps réel = 9h00 − 0h45 = 8h15",c:"ok"}},
+    end1:{t:"Session clôturée / validée",d:"Durée définitivement calculée et horodatée. Donnée fiable et infalsifiable, prête pour la facturation agence et la paie.",s:"Clôturée / Validée",log:{t:"17:00:21",m:"Session CLÔTURÉE / VALIDÉE",c:"ok"}},
+    autoTimer:{t:"Minuterie — 23:30",d:"Toutes les sessions doivent être closes avant la fin du jour comptable. Une session encore ouverte à 23:30 déclenche la clôture forcée du système.",s:"Ouverte / En cours",log:{t:"23:30:00",m:"Jour comptable clos — session encore ouverte",c:"err"}},
+    autoClose:{t:"Clôture forcée",d:"Le système ferme la session de force et active le flag « À vérifier », pour signaler qu'un contrôle humain reste nécessaire.",s:"Clôturée automatiquement",log:{t:"23:30:00",m:"Clôture forcée système · flag « À vérifier »",c:"err"}},
+    autoEnd:{t:"Clôturée automatiquement",d:"Session fermée par le système à 23:30. Le flag « À vérifier » invite le Technicien à corriger l'heure de sortie le lendemain.",s:"Clôturée auto (À vérifier)",log:{t:"23:30:00",m:"Session clôturée automatiquement (À vérifier)",c:"err"}}
+  };
+
+  /* ---------------- flows ---------------- */
+  // f: from, t: to, fs/ts: sides, l: label, k: kind (norm/yes/err/dash), p: explicit points
+  const F = [
+    {f:"start1",t:"scanIn",fs:"right",ts:"left"},
+    {f:"scanIn",t:"verify",fs:"bottom",ts:"top"},
+    {f:"verify",t:"gCtrl",fs:"right",ts:"left"},
+    {f:"gCtrl",t:"create",fs:"right",ts:"left",l:"Oui",k:"yes"},
+    {f:"gCtrl",t:"refuse1",fs:"bottom",ts:"top",l:"Non",k:"err"},
+    {f:"create",t:"notif1",fs:"bottom",ts:"top"},
+    {f:"notif1",t:"gId",fs:"right",ts:"left"},
+    {f:"gId",t:"open",fs:"top",ts:"bottom",l:"Oui",k:"yes"},
+    {f:"gId",t:"refuse2",fs:"bottom",ts:"top",l:"Non",k:"err"},
+    {f:"open",t:"confirm",fs:"top",ts:"bottom"},
+    {f:"confirm",t:"scanBreak",fs:"right",ts:"left"},
+    {f:"scanBreak",t:"startBreak",fs:"bottom",ts:"top"},
+    {f:"startBreak",t:"gReturn",fs:"right",ts:"left"},
+    {f:"gReturn",t:"scanReturn",fs:"top",ts:"bottom",l:"Oui · <40min",k:"yes"},
+    {f:"scanReturn",t:"calcBreak",fs:"bottom",ts:"top"},
+    {f:"calcBreak",t:"scanOut",fs:"top",ts:"bottom"},
+    {f:"gReturn",t:"timeoutAlert",fs:"bottom",ts:"top",l:"Non · timeout",k:"err"},
+    {f:"timeoutAlert",t:"gOptions",fs:"right",ts:"left"},
+    {f:"gOptions",t:"optClose",fs:"bottom",ts:"top",l:"A",k:"yes"},
+    {f:"optClose",t:"endEarly",fs:"right",ts:"bottom"},
+    {f:"gOptions",t:"optExtend",fs:"bottom",ts:"top",l:"B"},
+    {f:"optExtend",t:"gReturn",k:"dash",p:[[1360-71,626],[1250,626],[1250,315],[1300-34,315]]},
+    {f:"gOptions",t:"optManual",fs:"bottom",ts:"top",l:"C"},
+    {f:"optManual",t:"calcBreak",k:"dash",p:[[1670,626-32],[1670,470],[1460,470],[1460,315+32]]},
+    {f:"scanOut",t:"verifyOut",fs:"bottom",ts:"top"},
+    {f:"verifyOut",t:"notif2",fs:"bottom",ts:"top"},
+    {f:"notif2",t:"gClose",fs:"right",ts:"left"},
+    {f:"gClose",t:"calcFinal",fs:"top",ts:"bottom",l:"Oui",k:"yes"},
+    {f:"gClose",t:"anomaly",fs:"bottom",ts:"top",l:"Anomalie",k:"err"},
+    {f:"calcFinal",t:"end1",fs:"right",ts:"left"},
+    {f:"open",t:"autoTimer",fs:"bottom",ts:"top",l:"non clôturée",k:"dash"},
+    {f:"autoTimer",t:"autoClose",fs:"right",ts:"left",l:"à 23:30",k:"err"},
+    {f:"autoClose",t:"autoEnd",fs:"right",ts:"left"}
+  ];
+
+  /* ---------------- scenario animation paths ---------------- */
+  const SCEN = {
+    s1:["start1","scanIn","verify","gCtrl","create","notif1","gId","open","confirm","scanBreak","startBreak","gReturn","scanReturn","calcBreak","scanOut","verifyOut","notif2","gClose","calcFinal","end1"],
+    s2:["start1","scanIn","verify","gCtrl","create","notif1","gId","open","confirm","scanBreak","startBreak","gReturn","timeoutAlert","gOptions","optClose","endEarly"],
+    s3:["start1","scanIn","verify","gCtrl","create","notif1","gId","refuse2"],
+    s4:["start1","scanIn","verify","gCtrl","create","notif1","gId","open","autoTimer","autoClose","autoEnd"]
+  };
+
+  /* shift everything right so nodes clear the lane-title strip (x<132) */
+  const OX=66;
+  Object.values(N).forEach(n=>{ n.x+=OX; });
+  F.forEach(fw=>{ if(fw.p) fw.p=fw.p.map(p=>[p[0]+OX,p[1]]); });
+
+  /* ---------------- helpers ---------------- */
+  function el(tag,attrs,parent){const e=document.createElementNS(SVGNS,tag);
+    for(const k in attrs) e.setAttribute(k,attrs[k]); if(parent)parent.appendChild(e); return e;}
+  function box(n){
+    if(n.type==="task") return {w:TASK_W,h:TASK_H};
+    if(n.type==="gate") return {w:GATE*2,h:GATE*2};
+    return {w:EV*2,h:EV*2};
+  }
+  function anchor(n,side){
+    const b=box(n); const hw=b.w/2, hh=b.h/2;
+    if(n.type==="gate"){ // diamond
+      if(side==="left") return {x:n.x-GATE,y:n.y};
+      if(side==="right")return {x:n.x+GATE,y:n.y};
+      if(side==="top")  return {x:n.x,y:n.y-GATE};
+      return {x:n.x,y:n.y+GATE};
+    }
+    if(side==="left") return {x:n.x-hw,y:n.y};
+    if(side==="right")return {x:n.x+hw,y:n.y};
+    if(side==="top")  return {x:n.x,y:n.y-hh};
+    return {x:n.x,y:n.y+hh};
+  }
+  function inferSides(a,b){
+    // returns [fromSide,toSide]
+    if(a.lane===b.lane){
+      if(Math.abs(a.y-b.y)<10){ return b.x>a.x?["right","left"]:["left","right"]; }
+      return a.y<b.y?["bottom","top"]:["top","bottom"];
+    }
+    const la=LANES.findIndex(l=>l.id===a.lane), lb=LANES.findIndex(l=>l.id===b.lane);
+    return la<lb?["bottom","top"]:["top","bottom"];
+  }
+  function routePts(fw){
+    if(fw.p) return fw.p.map(p=>({x:p[0],y:p[1]}));
+    const a=N[fw.f], b=N[fw.t];
+    let fs=fw.fs, ts=fw.ts;
+    if(!fs||!ts){const s=inferSides(a,b);fs=fs||s[0];ts=ts||s[1];}
+    const E=anchor(a,fs), X=anchor(b,ts);
+    const pts=[E];
+    const horiz=(s)=>s==="left"||s==="right";
+    if(horiz(fs)){
+      if(horiz(ts)){const mx=(E.x+X.x)/2;pts.push({x:mx,y:E.y},{x:mx,y:X.y});}
+      else pts.push({x:X.x,y:E.y});
+    }else{
+      if(!horiz(ts)){const my=(E.y+X.y)/2;pts.push({x:E.x,y:my},{x:X.x,y:my});}
+      else pts.push({x:E.x,y:X.y});
+    }
+    pts.push(X);
+    return pts;
+  }
+  function roundedD(pts,r){
+    if(pts.length<2) return "";
+    if(pts.length===2) return `M${pts[0].x},${pts[0].y} L${pts[1].x},${pts[1].y}`;
+    let d=`M${pts[0].x},${pts[0].y}`;
+    for(let i=1;i<pts.length-1;i++){
+      const p0=pts[i-1],p1=pts[i],p2=pts[i+1];
+      const v1={x:p1.x-p0.x,y:p1.y-p0.y}, v2={x:p2.x-p1.x,y:p2.y-p1.y};
+      const l1=Math.hypot(v1.x,v1.y), l2=Math.hypot(v2.x,v2.y);
+      const rr=Math.min(r,l1/2,l2/2);
+      const a={x:p1.x-v1.x/l1*rr,y:p1.y-v1.y/l1*rr};
+      const c={x:p1.x+v2.x/l2*rr,y:p1.y+v2.y/l2*rr};
+      d+=` L${a.x},${a.y} Q${p1.x},${p1.y} ${c.x},${c.y}`;
+    }
+    const last=pts[pts.length-1];
+    d+=` L${last.x},${last.y}`;
+    return d;
+  }
+  function midPoint(pts){
+    // point roughly at middle of polyline for label placement
+    let total=0;const segs=[];
+    for(let i=1;i<pts.length;i++){const l=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);segs.push(l);total+=l;}
+    let target=total/2,acc=0;
+    for(let i=1;i<pts.length;i++){
+      if(acc+segs[i-1]>=target){const t=(target-acc)/segs[i-1];
+        return {x:pts[i-1].x+(pts[i].x-pts[i-1].x)*t, y:pts[i-1].y+(pts[i].y-pts[i-1].y)*t};}
+      acc+=segs[i-1];
+    }
+    return pts[Math.floor(pts.length/2)];
+  }
+
+  /* ---------------- build defs (markers) ---------------- */
+  const defs=el("defs",{},svg);
+  function marker(id,color){
+    const m=el("marker",{id,viewBox:"0 0 10 10",refX:"8.5",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},defs);
+    el("path",{d:"M0,0 L10,5 L0,10 z",fill:color},m);
+  }
+  marker("arrow","#3a4c6d");
+  marker("arrowHi","#ffb63d");
+  marker("arrowErr","#ff5468");
+  marker("arrowYes","#3ad9a6");
+
+  /* ---------------- draw lanes ---------------- */
+  const gLanes=el("g",{},svg);
+  LANES.forEach((L,i)=>{
+    el("rect",{x:0,y:L.y0,width:2200,height:L.y1-L.y0,fill:i%2?"rgba(255,255,255,.012)":"rgba(255,255,255,.028)"},gLanes);
+    el("line",{x1:0,y1:L.y1,x2:2200,y2:L.y1,stroke:"var(--line-soft)","stroke-width":1},gLanes);
+    // lane header strip
+    el("rect",{x:0,y:L.y0,width:132,height:L.y1-L.y0,fill:"rgba(9,15,28,.55)"},gLanes);
+    el("line",{x1:132,y1:L.y0,x2:132,y2:L.y1,stroke:"var(--line-soft)","stroke-width":1},gLanes);
+    el("rect",{x:16,y:(L.y0+L.y1)/2-26,width:4,height:52,rx:2,fill:L.raw,opacity:.9},gLanes);
+    const tx=el("text",{x:30,y:(L.y0+L.y1)/2,fill:L.raw,"class":"laneLabel","dominant-baseline":"middle"},gLanes);
+    // wrap lane label if needed
+    const words=L.label.split(" ");
+    if(words.length>1 && L.label.length>14){
+      tx.setAttribute("y",(L.y0+L.y1)/2-8);
+      words.forEach((w,wi)=>{const ts=el("tspan",{x:30,dy:wi?15:0},tx);ts.textContent=w;});
+    } else tx.textContent=L.label;
+  });
+
+  /* ---------------- draw flows ---------------- */
+  const gFlows=el("g",{},svg);
+  const flowEls={}; // key f>t -> {base, hi, pts, path}
+  F.forEach(fw=>{
+    const pts=routePts(fw);
+    const d=roundedD(pts,12);
+    const kind=fw.k||"norm";
+    const base=el("path",{d,"class":"flowbase","marker-end":
+        kind==="err"?"url(#arrowErr)":kind==="yes"?"url(#arrowYes)":"url(#arrow)"},gFlows);
+    if(kind==="err"){base.setAttribute("stroke","#5a2733");}
+    if(kind==="dash"){base.setAttribute("stroke-dasharray","6 5");base.setAttribute("stroke","#33456a");}
+    // highlight overlay (hidden until traversed/animated)
+    const hi=el("path",{d,"class":"flow-hi",style:"opacity:0","marker-end":"url(#arrowHi)"},gFlows);
+    let lbl=null;
+    if(fw.l){
+      const mp=midPoint(pts);
+      lbl=el("text",{x:mp.x,y:mp.y-6,"class":"flowlabel "+(kind==="err"?"err":kind==="yes"?"yes":""),
+        "text-anchor":"middle"},gFlows);
+      lbl.textContent=fw.l;
+    }
+    flowEls[fw.f+">"+fw.t]={base,hi,pts,el:base,label:lbl};
+  });
+
+  /* ---------------- draw nodes ---------------- */
+  const gNodes=el("g",{},svg);
+  const nodeEls={};
+  function nodeFill(n){
+    const c=laneRaw(n.lane);
+    return "rgba(20,30,52,.92)";
+  }
+  Object.entries(N).forEach(([id,n])=>{
+    const g=el("g",{"class":"node","data-id":id,tabindex:"0",role:"button"},gNodes);
+    const b=box(n); const raw=laneRaw(n.lane);
+    let shape;
+    if(n.type==="task"){
+      shape=el("rect",{x:n.x-b.w/2,y:n.y-b.h/2,width:b.w,height:b.h,rx:11,
+        "class":"box",fill:nodeFill(n),stroke:raw,"stroke-width":1.6,"stroke-opacity":.55},g);
+    }else if(n.type==="gate"){
+      shape=el("path",{d:`M${n.x},${n.y-GATE} L${n.x+GATE},${n.y} L${n.x},${n.y+GATE} L${n.x-GATE},${n.y} z`,
+        "class":"box",fill:"rgba(20,30,52,.95)",stroke:raw,"stroke-width":1.7,"stroke-opacity":.7},g);
+    }else if(n.type==="timer"){
+      shape=el("circle",{cx:n.x,cy:n.y,r:EV,"class":"box",fill:"rgba(20,30,52,.95)",
+        stroke:"var(--signal)","stroke-width":1.8,"stroke-dasharray":"4 3"},g);
+      el("circle",{cx:n.x,cy:n.y,r:EV-6,fill:"none",stroke:"var(--signal)","stroke-width":1,"stroke-opacity":.5},g);
+      el("path",{d:`M${n.x},${n.y-8} L${n.x},${n.y} L${n.x+6},${n.y+4}`,fill:"none",stroke:"var(--signal)","stroke-width":1.6,"stroke-linecap":"round"},g);
+    }else{ // end / end-err
+      const col=n.type==="end-err"?"var(--alert)":"var(--valid)";
+      shape=el("circle",{cx:n.x,cy:n.y,r:EV,"class":"box",fill:"rgba(20,30,52,.95)",
+        stroke:col,"stroke-width":3},g);
+    }
+    // label text (multiline)
+    const lines=n.label.split("\n");
+    const lh=13.5;
+    const startY=n.y-((lines.length-1)*lh)/2;
+    const fs = n.type==="task"?11.4 : n.type==="gate"?10.6 : 10.4;
+    const isEvent = n.type!=="task"&&n.type!=="gate";
+    lines.forEach((ln,i)=>{
+      const tt=el("text",{x:n.x,y:startY+i*lh,"text-anchor":"middle","dominant-baseline":"middle",
+        "font-size":fs, fill:"var(--ink)"},g);
+      if(isEvent) tt.setAttribute("fill", n.type==="end"?"#bff3e2":n.type==="end-err"?"#ffc2ca":"#ffe2b0");
+      tt.textContent=ln;
+    });
+    nodeEls[id]=g;
+
+    g.addEventListener("click",()=>selectNode(id));
+    g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();selectNode(id);}});
+  });
+
+  /* token */
+  const gToken=el("g",{"class":"token",style:"opacity:0"},svg);
+  el("circle",{cx:0,cy:0,r:11,fill:"var(--signal)"},gToken);
+  el("circle",{cx:0,cy:0,r:5,fill:"#fff8e8"},gToken);
+  const tokenPulse=el("circle",{cx:0,cy:0,r:11,fill:"none",stroke:"var(--signal)","stroke-width":2,opacity:.6},gToken);
+  const anR=el("animate",{attributeName:"r",values:"9;20;9",dur:"1.8s",repeatCount:"indefinite"},tokenPulse);
+  const anO=el("animate",{attributeName:"opacity",values:".7;0;.7",dur:"1.8s",repeatCount:"indefinite"},tokenPulse);
+
+  /* ---------------- engine ---------------- */
+  const consoleEl=document.getElementById("console");
+  let scenId="s1", steps=SCEN.s1, idx=-1, playing=false, speed=1, animRAF=null;
+
+  const ui={
+    stepno:document.getElementById("stepno"),
+    title:document.getElementById("stTitle"),
+    actor:document.getElementById("stActor"),
+    desc:document.getElementById("stDesc"),
+    status:document.getElementById("stStatus"),
+    led:document.getElementById("stLed"),
+    play:document.getElementById("play"),
+    playtxt:document.getElementById("playtxt"),
+    playicon:document.getElementById("playicon")
+  };
+  const actorName={interim:"Intérimaire",systeme:"Système",valideur:"Technicien / Réceptionniste"};
+
+  function applyVisibility(){
+    Object.entries(N).forEach(([id,n])=>{
+      const vis=n.scen.includes(scenId);
+      nodeEls[id].classList.toggle("hidden",!vis);
+    });
+    // flows visible if both endpoints visible
+    F.forEach(fw=>{
+      const vis=N[fw.f].scen.includes(scenId)&&N[fw.t].scen.includes(scenId);
+      const fe=flowEls[fw.f+">"+fw.t];
+      fe.base.style.display=vis?"":"none";
+      fe.hi.style.display=vis?"":"none";
+      if(fe.label) fe.label.style.display=vis?"":"none";
+    });
+  }
+
+  function resetVisual(){
+    idx=-1;
+    Object.values(nodeEls).forEach(g=>g.classList.remove("active","done"));
+    F.forEach(fw=>{flowEls[fw.f+">"+fw.t].hi.style.opacity=0;});
+    gToken.style.opacity=0;
+    // dim non-path nodes
+    dimNonPath();
+    ui.stepno.textContent="00";
+    ui.title.textContent="Prêt à démarrer";
+    ui.actor.innerHTML='<span class="pip" style="background:var(--signal)"></span>Scénario : '+scenLabel();
+    ui.desc.textContent="Le jeton lumineux suit le fil du processus, couloir par couloir. Cliquez sur n'importe quel nœud pour lire son détail, ou avancez pas à pas.";
+    ui.status.textContent="—";
+    ui.led.style.color="var(--signal)";ui.led.style.background="var(--signal)";
+    consoleEl.innerHTML='<div class="logline" style="animation:none;opacity:1;transform:none"><span class="t">--:--:--</span><span class="m cursor">scénario chargé — prêt.</span></div>';
+  }
+  function scenLabel(){return {s1:"Nominal",s2:"Timeout pause",s3:"Refus / anti-fraude",s4:"Clôture auto 23:30"}[scenId];}
+
+  function dimNonPath(){
+    const set=new Set(steps);
+    Object.entries(nodeEls).forEach(([id,g])=>{
+      if(g.classList.contains("hidden"))return;
+      g.classList.toggle("dim", !set.has(id));
+    });
+  }
+
+  function flowBetween(a,b){return flowEls[a+">"+b];}
+
+  function pointAt(pts,t){
+    // t in [0,1] along polyline
+    let total=0;const segs=[];
+    for(let i=1;i<pts.length;i++){const l=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);segs.push(l);total+=l;}
+    let target=total*t,acc=0;
+    for(let i=1;i<pts.length;i++){
+      if(acc+segs[i-1]>=target){const tt=segs[i-1]?(target-acc)/segs[i-1]:0;
+        return {x:pts[i-1].x+(pts[i].x-pts[i-1].x)*tt,y:pts[i-1].y+(pts[i].y-pts[i-1].y)*tt};}
+      acc+=segs[i-1];
+    }
+    return pts[pts.length-1];
+  }
+
+  function setStepUI(id){
+    const n=N[id], det=D[id];
+    ui.stepno.textContent=String(steps.indexOf(id)+1).padStart(2,"0");
+    ui.title.textContent=det.t;
+    ui.actor.innerHTML='<span class="pip" style="background:'+laneRaw(n.lane)+'"></span>'+actorName[n.lane];
+    ui.desc.textContent=det.d;
+    ui.status.textContent=det.s;
+    const err=/refus|litige|timeout|forcée|auto|vérifier|annul/i.test(det.s);
+    const ok=/validée|clôturée \/ val|en cours|ouverte/i.test(det.s);
+    const col=err?"var(--alert)":ok?"var(--valid)":"var(--signal)";
+    ui.led.style.color=col;ui.led.style.background=col;
+    if(det.log) pushLog(det.log);
+  }
+  function pushLog(log){
+    const line=document.createElement("div");
+    line.className="logline"+(log.c?" "+log.c:"");
+    line.innerHTML='<span class="t">'+log.t+'</span><span class="m">'+log.m+'</span>';
+    consoleEl.appendChild(line);
+    consoleEl.scrollTop=consoleEl.scrollHeight;
+  }
+
+  function arrive(id){
+    // mark node active/done
+    if(idx>=0 && steps[idx-1]) nodeEls[steps[idx-1]] && nodeEls[steps[idx-1]].classList.add("done");
+    steps.forEach((s,i)=>{ if(i<steps.indexOf(id)) nodeEls[s].classList.add("done"); });
+    Object.values(nodeEls).forEach(g=>g.classList.remove("active"));
+    nodeEls[id].classList.add("active");
+    // token to node center
+    const n=N[id];
+    gToken.style.opacity=1;
+    gToken.setAttribute("transform",`translate(${n.x},${n.y})`);
+    setStepUI(id);
+    autoScroll();
+  }
+
+  function animateFlow(fromId,toId,done){
+    const fe=flowBetween(fromId,toId);
+    if(!fe){ // no direct flow: jump
+      arrive(toId); done&&done(); return;
+    }
+    fe.hi.style.opacity=1;
+    const pts=fe.pts;
+    // compute length for duration
+    let total=0;for(let i=1;i<pts.length;i++)total+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
+    const dur=Math.max(420, total/1.05)/speed;
+    const start=performance.now();
+    gToken.style.opacity=1;
+    nodeEls[fromId].classList.add("done");
+    nodeEls[fromId].classList.remove("active");
+    function frame(now){
+      let t=(now-start)/dur; if(t>1)t=1;
+      const e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2; // easeInOut
+      const p=pointAt(pts,e);
+      gToken.setAttribute("transform",`translate(${p.x},${p.y})`);
+      if(t<1){animRAF=requestAnimationFrame(frame);}
+      else { arrive(toId); done&&done(); }
+    }
+    animRAF=requestAnimationFrame(frame);
+  }
+
+  function goTo(newIdx, animated){
+    if(newIdx<0){resetVisual();return;}
+    if(newIdx>=steps.length) newIdx=steps.length-1;
+    cancelAnimationFrame(animRAF);
+    if(!animated || newIdx<=idx){
+      // instant: rebuild done/highlights up to newIdx
+      Object.values(nodeEls).forEach(g=>g.classList.remove("active","done"));
+      F.forEach(fw=>{flowEls[fw.f+">"+fw.t].hi.style.opacity=0;});
+      // clear console back to start then replay logs up to idx (simpler: rebuild)
+      consoleEl.innerHTML="";
+      for(let i=0;i<=newIdx;i++){
+        const id=steps[i];
+        if(i<newIdx) nodeEls[id].classList.add("done");
+        if(i>0){const fe=flowBetween(steps[i-1],steps[i]); if(fe) fe.hi.style.opacity=1;}
+        if(i<newIdx && D[id].log) pushLog(D[id].log);
+      }
+      idx=newIdx;
+      arrive(steps[newIdx]);
+      return;
+    }
+    // animated forward one step
+    idx++;
+    const from=steps[idx-1], to=steps[idx];
+    animateFlow(from,to,()=>{ if(playing) scheduleNext(); });
+  }
+
+  let dwellTimer=null;
+  function scheduleNext(){
+    clearTimeout(dwellTimer);
+    if(idx>=steps.length-1){ setPlaying(false); return; }
+    dwellTimer=setTimeout(()=>{ if(playing) goTo(idx+1,true); }, 620/speed);
+  }
+
+  function setPlaying(p){
+    playing=p;
+    ui.playicon.innerHTML = p ? '<rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/>' : '<path d="M7 5v14l12-7z"/>';
+    ui.playtxt.textContent = p ? "Pause" : (idx>=steps.length-1?"Rejouer":"Lancer");
+  }
+
+  function play(){
+    if(idx>=steps.length-1){ resetVisual(); }
+    setPlaying(true);
+    if(idx<0){ idx=0; arrive(steps[0]); dimNonPath(); scheduleNext(); }
+    else { goTo(idx+1,true); }
+  }
+  function pause(){ setPlaying(false); clearTimeout(dwellTimer); cancelAnimationFrame(animRAF); }
+
+  function selectNode(id){
+    // if node in current scenario path, jump token there; else just show info
+    pause();
+    if(steps.includes(id)){ goTo(steps.indexOf(id),false); }
+    else {
+      Object.values(nodeEls).forEach(g=>g.classList.remove("active"));
+      nodeEls[id].classList.add("active");
+      setStepUI(id);
+      ui.stepno.textContent="··";
+    }
+  }
+
+  function loadScenario(sid){
+    pause();
+    scenId=sid; steps=SCEN[sid];
+    document.querySelectorAll(".scen button").forEach(b=>b.classList.toggle("active",b.dataset.scen===sid));
+    applyVisibility();
+    resetVisual();
+    setPlaying(false);
+    // scroll to start
+    {const _s=document.getElementById("scroller"); if(_s.scrollTo)_s.scrollTo({left:0,behavior:"smooth"});}
+  }
+
+  /* ---------------- wire controls ---------------- */
+  ui.play.addEventListener("click",()=>{ playing?pause():play(); });
+  document.getElementById("next").addEventListener("click",()=>{ pause(); if(idx<0)arrive(steps[0]); goTo(Math.min(idx+1,steps.length-1),false); autoScroll(); });
+  document.getElementById("prev").addEventListener("click",()=>{ pause(); goTo(Math.max(idx-1,0),false); autoScroll(); });
+  document.getElementById("restart").addEventListener("click",()=>{ pause(); resetVisual(); setPlaying(false); {const _s=document.getElementById("scroller"); if(_s.scrollTo)_s.scrollTo({left:0,behavior:"smooth"});} });
+  document.querySelectorAll(".scen button").forEach(b=>b.addEventListener("click",()=>loadScenario(b.dataset.scen)));
+  const sp=document.getElementById("speed");
+  sp.addEventListener("input",()=>{speed=parseFloat(sp.value);document.getElementById("speedv").textContent=speed+"×";});
+
+  function autoScroll(){
+    if(idx<0)return;
+    const n=N[steps[idx]]; const sc=document.getElementById("scroller");
+    const view=sc.clientWidth, scale=view/ (sc.scrollWidth||1);
+    const target=n.x*(sc.scrollWidth/2200)-view/2;
+    if(typeof sc.scrollTo!=="function")return;
+    sc.scrollTo({left:Math.max(0,target),behavior:"smooth"});
+  }
+
+  // during play, keep node in view
+  const origArrive=arrive;
+
+  /* init */
+  applyVisibility();
+  resetVisual();
+  setPlaying(false);
+
+})();
+</script>
+</body>
+</html>
