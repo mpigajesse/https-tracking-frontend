@@ -20,7 +20,8 @@ import {
   ChevronRight,
   Building2,
   LogOut,
-  GitBranch,
+  Smartphone,
+  ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useI18n, TranslationKey } from '@/lib/i18n';
@@ -49,7 +50,6 @@ const navItems: NavItem[] = [
   { labelKey: 'nav_my_sessions',   href: '/mes-sessions',  icon: History,         roles: ['interimaire'] },
   { labelKey: 'nav_my_qr',         href: '/mon-qr',        icon: QrCode,          roles: ['interimaire'] },
   { labelKey: 'nav_settings',      href: '/parametres',    icon: Settings,        roles: ['admin', 'technicien', 'receptionniste', 'interimaire'] },
-  { labelKey: 'nav_workflow',      href: '/workflow',      icon: GitBranch,       roles: ['admin', 'technicien', 'receptionniste', 'interimaire'] },
 ];
 
 const roleColorMap: Record<UserRole, string> = {
@@ -340,6 +340,45 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
           );
         })}
       </nav>
+
+      {/* ── Application mobile ──
+          Surface applicative distincte (poste terrain), pas une page de l'app web :
+          elle est donc présentée à part de la navigation, et réservée aux profils
+          qui tiennent réellement un poste. */}
+      {user && (user.role === 'admin' || user.role === 'receptionniste') && (
+        <div className="relative px-2 pb-2 z-10">
+          <Link href="/m" onClick={isMobile ? onMobileClose : undefined}>
+            <motion.div
+              whileHover={{ x: (!collapsed || isMobile) ? 4 : 0 }}
+              className={cn(
+                'group relative flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors',
+                'border border-[#CC0000]/40 bg-[#CC0000]/10 hover:bg-[#CC0000]/20',
+                collapsed && !isMobile && 'justify-center'
+              )}
+            >
+              <Smartphone className="w-5 h-5 flex-shrink-0 text-[#CC0000]" />
+              {(!collapsed || isMobile) && (
+                <>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-white text-sm font-medium whitespace-nowrap">
+                      {t('nav_mobile_app')}
+                    </div>
+                    <div className="text-[#6B7280] text-[10px] truncate mt-0.5">
+                      {t('mobile_app_hint')}
+                    </div>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 flex-shrink-0 text-[#6B7280]" />
+                </>
+              )}
+              {collapsed && !isMobile && (
+                <div className="absolute left-full ml-2 px-2 py-1 bg-[#1C1C1C] text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 border border-[#2A2A2A]">
+                  {t('nav_mobile_app')}
+                </div>
+              )}
+            </motion.div>
+          </Link>
+        </div>
+      )}
 
       {/* ── User profile ── */}
       {user && (

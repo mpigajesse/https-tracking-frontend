@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import Link from 'next/link';
-import { Eye, EyeOff, AlertCircle, Building2, Users, Shield, GitBranch } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Building2, Users, Shield, Smartphone, ArrowRight } from 'lucide-react';
 import { useAuth, getDashboardRoute } from '@/lib/auth-context';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
@@ -510,21 +510,33 @@ function LoginForm() {
               ))}
             </div>
 
-            {/* Workflow link */}
+            {/* Mobile app entry point — surface distincte (poste terrain),
+                avec ses propres identifiants : d'où une carte séparée du formulaire. */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              className="mt-4 text-center"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="mt-4"
             >
-                <Link
-                  href="/workflow"
-                  className="inline-flex items-center gap-2 text-xs text-[#6B7280] hover:text-[#CC0000] transition-colors group"
-                >
-                  <GitBranch className="w-3.5 h-3.5 group-hover:text-[#CC0000] transition-colors" />
-                  {lang === 'fr' ? 'Voir le diagramme de séquence du système' : 'View system sequence diagram'}
-                </Link>
-              </motion.div>
+              <Link
+                href="/m"
+                className="flex items-center gap-3 p-3 rounded-xl border border-[#CC0000]/30 bg-[#FFF0F0] dark:bg-[#2A0000] hover:border-[#CC0000] transition-colors group"
+              >
+                <span className="flex-shrink-0 w-9 h-9 rounded-lg grid place-items-center bg-white dark:bg-[#1C1C1C] border border-[#CC0000]/20">
+                  <Smartphone className="w-4 h-4 text-[#CC0000]" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-semibold text-gray-800 dark:text-gray-100">
+                    {t('nav_mobile_app')}
+                  </span>
+                  <span className="block text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                    {t('mobile_app_hint')}
+                  </span>
+                </span>
+                <ArrowRight className="w-4 h-4 flex-shrink-0 text-[#CC0000] group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </motion.div>
+
             </div>
           </motion.div>
         </div>

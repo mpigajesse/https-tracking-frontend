@@ -20,7 +20,8 @@ const translations = {
     nav_my_sessions: 'Mes Sessions',
     nav_my_qr: 'Mon QR Code',
       nav_settings: 'Paramètres',
-      nav_workflow: 'Diagramme Flux',
+    nav_mobile_app: 'Application mobile',
+    mobile_app_hint: 'Poste de scan et validation terrain',
     // ── Roles ────────────────────────────────────────────
     role_admin: 'Administrateur',
     role_technicien: 'Technicien',
@@ -345,7 +346,8 @@ const translations = {
     nav_my_sessions: 'My Sessions',
     nav_my_qr: 'My QR Code',
       nav_settings: 'Settings',
-      nav_workflow: 'Workflow Diagram',
+    nav_mobile_app: 'Mobile app',
+    mobile_app_hint: 'On-site scanning and validation station',
     // ── Roles ────────────────────────────────────────────
     role_admin: 'Administrator',
     role_technicien: 'Technician',
