@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Check, ShieldAlert, ShieldCheck, TriangleAlert } from "lucide-react";
+import { Check, ShieldAlert, ShieldCheck, TriangleAlert, UserSquare2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { TopBar } from "@/components/mobile/TopBar";
 import { ActionSheet } from "@/components/mobile/ActionSheet";
@@ -15,17 +15,21 @@ import { trouveInterimaire } from "@/lib/mobile/mock-data";
 import { useMobileStore } from "@/lib/mobile/store";
 import { useMobileT, type MobileT } from "@/lib/mobile/i18n";
 import { calculeDuree, formatDuree, formatHeure } from "@/lib/mobile/time";
+import { nomDemandeur, type Demandeur } from "@/lib/mobile/types";
 import { cn } from "@/lib/utils";
 
 export default function ValidationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { compte, sessions, envoyer, now } = useMobileStore();
+  const { compte, sessions, envoyer, now, demandeursDisponibles } = useMobileStore();
   const { t } = useMobileT();
+  const demandeurs = demandeursDisponibles();
 
   const [sheetRefus, setSheetRefus] = useState(false);
   const [motif, setMotif] = useState("");
   const [motifLibre, setMotifLibre] = useState("");
+  /** Demandeur affecté à l'ouverture : sans lui, la validation est impossible. */
+  const [demandeurId, setDemandeurId] = useState("");
 
   const session = sessions.find((s) => s.id === id);
   if (!compte || !session) {
@@ -48,12 +52,27 @@ export default function ValidationDetailPage() {
   const dureeSuspecte = duree.brutMs > DUREE_SESSION_MAX_H * 3_600_000;
   const motifFinal = (motif === "__libre__" ? motifLibre : motif).trim();
 
+  const demandeurChoisi = demandeurs.find((d) => d.id === demandeurId);
+
   const approuver = () => {
     const at = new Date().toISOString();
+
+    if (estOuverture && !demandeurChoisi) {
+      toast.error(t("err_demandeurRequired"));
+      return;
+    }
+
     const r = envoyer(
       session.id,
-      estOuverture
-        ? { type: "VALIDER_OUVERTURE", at, par: valideur }
+      estOuverture && demandeurChoisi
+        ? {
+            type: "VALIDER_OUVERTURE",
+            at,
+            par: valideur,
+            demandeurId: demandeurChoisi.id,
+            demandeurNom: nomDemandeur(demandeurChoisi),
+            serviceNom: demandeurChoisi.serviceNom,
+          }
         : { type: "VALIDER_CLOTURE", at, par: valideur },
     );
     if (!r.ok) {
@@ -102,7 +121,15 @@ export default function ValidationDetailPage() {
         )}
 
         {estOuverture ? (
-          <ConsigneControle t={t} />
+          <>
+            <ConsigneControle t={t} />
+            <ChoixDemandeur
+              demandeurs={demandeurs}
+              choisi={demandeurId}
+              onChoisir={setDemandeurId}
+              t={t}
+            />
+          </>
         ) : (
           <RecapDuree
             brut={duree.brutMs}
@@ -128,7 +155,8 @@ export default function ValidationDetailPage() {
             type="button"
             whileTap={{ scale: 0.98 }}
             onClick={approuver}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
+            disabled={estOuverture && !demandeurChoisi}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Check className="w-4 h-4" />
             {t(estOuverture ? "val_approveOpen" : "val_approveClose")}
@@ -193,6 +221,88 @@ export default function ValidationDetailPage() {
         </div>
       </ActionSheet>
     </>
+  );
+}
+
+/**
+ * Affectation du demandeur, obligatoire à l'ouverture.
+ *
+ * Les demandeurs sont groupés par service : le technicien raisonne d'abord
+ * « pour quel service ? », et seulement ensuite « pour qui ? ». La liste
+ * n'affiche que les demandeurs actifs dont le service l'est aussi.
+ */
+function ChoixDemandeur({
+  demandeurs,
+  choisi,
+  onChoisir,
+  t,
+}: {
+  demandeurs: Demandeur[];
+  choisi: string;
+  onChoisir: (id: string) => void;
+  t: MobileT;
+}) {
+  const parService = demandeurs.reduce<Record<string, Demandeur[]>>((acc, d) => {
+    (acc[d.serviceNom] ??= []).push(d);
+    return acc;
+  }, {});
+
+  return (
+    <section className="p-4 rounded-xl border border-gray-200 dark:border-[#2A2A2A] bg-white dark:bg-[#1C1C1C]">
+      <div className="flex items-center gap-2 mb-1">
+        <UserSquare2 className="w-4 h-4 text-[#CC0000]" />
+        <h2 className="m-0 text-sm font-semibold text-gray-900 dark:text-white">
+          {t("val_demandeur")}
+        </h2>
+      </div>
+      <p className="m-0 mb-3.5 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+        {t("val_demandeurDesc")}
+      </p>
+
+      {demandeurs.length === 0 ? (
+        <p className="m-0 text-sm text-gray-500 dark:text-gray-400">{t("val_demandeurEmpty")}</p>
+      ) : (
+        <div className="space-y-3">
+          {Object.entries(parService).map(([service, liste]) => (
+            <div key={service}>
+              <span className="block mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                {service}
+              </span>
+              <div className="space-y-1.5">
+                {liste.map((d) => {
+                  const actif = choisi === d.id;
+                  return (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => onChoisir(d.id)}
+                      aria-pressed={actif}
+                      className={cn(
+                        "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-sm text-left transition-colors",
+                        actif
+                          ? "border-[#CC0000] bg-[#FFF0F0] dark:bg-[#2A0000] text-[#CC0000] dark:text-[#FF6666]"
+                          : "border-gray-200 dark:border-[#2A2A2A] bg-[#F5F5F5] dark:bg-[#2A2A2A] text-gray-700 dark:text-gray-300",
+                      )}
+                    >
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "shrink-0 w-4 h-4 rounded-full border-2 grid place-items-center",
+                          actif ? "border-[#CC0000]" : "border-gray-400",
+                        )}
+                      >
+                        {actif && <span className="w-2 h-2 rounded-full bg-[#CC0000]" />}
+                      </span>
+                      {nomDemandeur(d)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

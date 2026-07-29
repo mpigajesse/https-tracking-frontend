@@ -3,23 +3,39 @@
 import Link from "next/link";
 import { ChevronRight, DoorOpen, Inbox, LogOut } from "lucide-react";
 import { TopBar } from "@/components/mobile/TopBar";
+import { EcranInterimaire } from "@/components/mobile/ecrans/EcranInterimaire";
 import { trouveInterimaire } from "@/lib/mobile/mock-data";
-import { useMobileT, type MobileT } from "@/lib/mobile/i18n";
+import { useMobileT, type MobileKey, type MobileT } from "@/lib/mobile/i18n";
 import { calculeDuree, formatDuree, formatHeure } from "@/lib/mobile/time";
 import { useMobileStore } from "@/lib/mobile/store";
-import type { Session } from "@/lib/mobile/types";
+import type { Role, Session } from "@/lib/mobile/types";
 import { cn } from "@/lib/utils";
+
+/** Clé de traduction du libellé de rôle, pour le sous-titre de la barre haute. */
+const CLE_ROLE: Record<Role, MobileKey> = {
+  admin: "role_admin",
+  societe: "role_societe",
+  receptionniste: "role_receptionniste",
+  technicien: "role_technicien",
+  interimaire: "role_interimaire",
+};
 
 /**
  * Écran d'accueil : la file d'attente humaine.
- * Deux passerelles du BPMN y aboutissent — « Identité validée ? » et
- * « Valider la clôture ? ». Admin et réceptionniste y font le même travail,
- * seule la portée des sessions diffère (tous sites contre un seul).
+ *
+ * Deux décisions y aboutissent — valider l'identité à l'ouverture, valider la
+ * clôture en fin de journée. C'est le **technicien** qui les prend : le
+ * réceptionniste ne fait que scanner. L'admin y accède aussi, tous sites
+ * confondus, en tant que superviseur.
+ *
+ * L'intérimaire, lui, est renvoyé vers son écran simplifié.
  */
 export default function FileValidationPage() {
   const { compte, sessions, now } = useMobileStore();
   const { t } = useMobileT();
   if (!compte) return null;
+
+  if (compte.role === "interimaire") return <EcranInterimaire compte={compte} />;
 
   const ouvertures = sessions.filter((s) => s.statut === "en_attente_ouverture");
   const clotures = sessions.filter((s) => s.statut === "en_attente_cloture");
@@ -29,7 +45,7 @@ export default function FileValidationPage() {
     <>
       <TopBar
         titre={t("nav_validate")}
-        sousTitre={`${t(compte.role === "admin" ? "role_admin" : "role_receptionniste")} · ${compte.site}`}
+        sousTitre={`${t(CLE_ROLE[compte.role])} · ${compte.site}`}
         action={
           <span
             className={cn(

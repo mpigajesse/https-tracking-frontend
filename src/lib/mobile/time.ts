@@ -3,8 +3,8 @@
  * Fonctions pures : aucune dépendance à React ni au store.
  */
 
-import { CUTOFF_JOUR_COMPTABLE, PAUSE_TIMEOUT_MIN } from "./constants";
-import type { DureeSession, Pause, Session } from "./types";
+import { CUTOFF_JOUR_COMPTABLE, PAUSE_TIMEOUT_MIN, SORTIE_TEMP_TIMEOUT_MIN } from "./constants";
+import type { DureeSession, Pause, Session, SortieTemporaire } from "./types";
 
 const MS_MIN = 60_000;
 
@@ -23,15 +23,34 @@ export function calculeEcheance(debutISO: string, prolongationMin = 0): string {
   return new Date(base + minutesToMs(PAUSE_TIMEOUT_MIN + prolongationMin)).toISOString();
 }
 
-/** Durée d'une pause. Une pause encore ouverte est comptée jusqu'à `now`. */
-export function dureePauseMs(pause: Pause, now: number): number {
-  const debut = new Date(pause.debut).getTime();
-  const fin = pause.fin ? new Date(pause.fin).getTime() : now;
+/**
+ * Échéance de retour d'une sortie temporaire = début + 15 min.
+ * Aucune prolongation possible : la règle des 15 minutes est ferme.
+ */
+export function calculeEcheanceSortie(debutISO: string): string {
+  const base = new Date(debutISO).getTime();
+  return new Date(base + minutesToMs(SORTIE_TEMP_TIMEOUT_MIN)).toISOString();
+}
+
+/** Durée d'un intervalle borné. Un intervalle ouvert est compté jusqu'à `now`. */
+function dureeIntervalleMs(debutISO: string, finISO: string | undefined, now: number): number {
+  const debut = new Date(debutISO).getTime();
+  const fin = finISO ? new Date(finISO).getTime() : now;
   return Math.max(0, fin - debut);
 }
 
+/** Durée d'une pause. Une pause encore ouverte est comptée jusqu'à `now`. */
+export function dureePauseMs(pause: Pause, now: number): number {
+  return dureeIntervalleMs(pause.debut, pause.fin, now);
+}
+
+/** Durée d'une sortie temporaire. Une sortie en cours est comptée jusqu'à `now`. */
+export function dureeSortieMs(sortie: SortieTemporaire, now: number): number {
+  return dureeIntervalleMs(sortie.debut, sortie.fin, now);
+}
+
 /**
- * Temps réel payable = (fin − début) − Σ durées de pause.
+ * Temps réel payable = (fin − début) − Σ pauses − Σ sorties temporaires.
  * Tant que la session est ouverte, `fin` vaut `now` (compteur vivant).
  */
 export function calculeDuree(session: Session, now: number): DureeSession {
@@ -39,17 +58,28 @@ export function calculeDuree(session: Session, now: number): DureeSession {
   const fin = session.fin ? new Date(session.fin).getTime() : now;
   const brutMs = Math.max(0, fin - debut);
   const pausesMs = session.pauses.reduce((acc, p) => acc + dureePauseMs(p, fin), 0);
-  return { brutMs, pausesMs, netMs: Math.max(0, brutMs - pausesMs) };
+  const sortiesMs = session.sorties.reduce((acc, s) => acc + dureeSortieMs(s, fin), 0);
+  return {
+    brutMs,
+    pausesMs,
+    sortiesMs,
+    netMs: Math.max(0, brutMs - pausesMs - sortiesMs),
+  };
 }
 
 /** Millisecondes restantes avant l'échéance de retour. Négatif = timeout dépassé. */
-export function resteAvantEcheance(pause: Pause, now: number): number {
-  return new Date(pause.echeance).getTime() - now;
+export function resteAvantEcheance(intervalle: Pause | SortieTemporaire, now: number): number {
+  return new Date(intervalle.echeance).getTime() - now;
 }
 
 /** La pause en cours, s'il y en a une. */
 export function pauseEnCours(session: Session): Pause | undefined {
   return session.pauses.find((p) => !p.fin);
+}
+
+/** La sortie temporaire en cours, s'il y en a une. */
+export function sortieEnCours(session: Session): SortieTemporaire | undefined {
+  return session.sorties.find((s) => !s.fin);
 }
 
 /** Instant de clôture forcée (23:30) du jour de la session. */
@@ -77,6 +107,14 @@ export function formatChrono(ms: number): string {
   const mm = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
   const ss = String(s % 60).padStart(2, "0");
   return `${hh}:${mm}:${ss}`;
+}
+
+/** « 12:34 » — compte à rebours mm:ss, borné à zéro. Usage : sortie de 15 min. */
+export function formatRestant(ms: number): string {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  const mm = String(Math.floor(s / 60)).padStart(2, "0");
+  const ss = String(s % 60).padStart(2, "0");
+  return `${mm}:${ss}`;
 }
 
 /** « 12:40 » — heure d'horloge. */

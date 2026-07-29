@@ -4,18 +4,21 @@ import { useState } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Modal } from '@/components/ui/Modal';
-import { mockSessions, Session, SessionStatus } from '@/lib/data';
+import { mockSessions, demandeursAffectables, Session, SessionStatus } from '@/lib/data';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, XCircle, Edit3, Clock, MapPin, RefreshCw } from 'lucide-react';
+import { CheckCircle2, XCircle, Edit3, Clock, MapPin, RefreshCw, UserSquare2, Layers } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '@/lib/auth-context';
 import { useI18n } from '@/lib/i18n';
 
 const statusBadge: Record<SessionStatus, 'info' | 'success' | 'warning' | 'danger' | 'neutral'> = {
   en_attente_ouverture: 'info',
   ouverte: 'success',
+  sortie_temporaire: 'info',
   en_attente_fermeture: 'warning',
   fermee: 'success',
   cloturee_auto: 'neutral',
+  cloturee_sortie_depassee: 'danger',
   en_litige: 'danger',
   annulee: 'neutral',
 };
@@ -24,19 +27,26 @@ const inputCls = 'w-full px-3 py-2 rounded-xl border border-gray-200 dark:border
 
 export default function ValidationPage() {
   const { t } = useI18n();
+  const { user } = useAuth();
   const [sessions, setSessions] = useState<Session[]>(mockSessions);
   const [selectedTab, setSelectedTab] = useState<'ouverture' | 'fermeture' | 'litige'>('ouverture');
   const [correctModal, setCorrectModal] = useState<Session | null>(null);
   const [correctedHeure, setCorrectedHeure] = useState('');
+  /** Demandeur choisi par session en attente d'ouverture, avant validation. */
+  const [demandeurParSession, setDemandeurParSession] = useState<Record<string, string>>({});
+
+  const demandeurs = demandeursAffectables();
 
   const statusLabel: Record<SessionStatus, string> = {
-    en_attente_ouverture: t('val_status_wait_open'),
-    ouverte:              t('val_status_open'),
-    en_attente_fermeture: t('val_status_wait_close'),
-    fermee:               t('val_status_closed'),
-    cloturee_auto:        t('val_status_auto'),
-    en_litige:            t('val_status_dispute'),
-    annulee:              t('val_status_cancelled'),
+    en_attente_ouverture:     t('val_status_wait_open'),
+    ouverte:                  t('val_status_open'),
+    sortie_temporaire:        t('st_sortie_temporaire'),
+    en_attente_fermeture:     t('val_status_wait_close'),
+    fermee:                   t('val_status_closed'),
+    cloturee_auto:            t('val_status_auto'),
+    cloturee_sortie_depassee: t('st_cloturee_sortie_depassee'),
+    en_litige:                t('val_status_dispute'),
+    annulee:                  t('val_status_cancelled'),
   };
 
   const ouverturePending = sessions.filter(s => s.statut === 'en_attente_ouverture');
@@ -45,8 +55,34 @@ export default function ValidationPage() {
 
   const displayed = selectedTab === 'ouverture' ? ouverturePending : selectedTab === 'fermeture' ? fermeturePending : litigePending;
 
+  /**
+   * Valide une session. À l'ouverture, le technicien affecte en même temps un
+   * demandeur : c'est lui qui détermine le service auquel les heures sont
+   * imputées, la validation ne peut donc pas s'en passer.
+   */
   const validate = (id: string, type: 'ouverture' | 'fermeture') => {
-    setSessions(prev => prev.map(s => s.id !== id ? s : { ...s, statut: type === 'ouverture' ? 'ouverte' : 'fermee' }));
+    if (type === 'ouverture') {
+      const demandeur = demandeurs.find(d => d.id === (demandeurParSession[id] ?? ''));
+      if (!demandeur) {
+        toast.error(t('val_demandeurRequired'));
+        return;
+      }
+      setSessions(prev => prev.map(s => s.id !== id ? s : {
+        ...s,
+        statut: 'ouverte',
+        validatedBy: user ? `${user.prenom} ${user.nom}` : undefined,
+        demandeurId: demandeur.id,
+        demandeurNom: `${demandeur.prenom} ${demandeur.nom}`,
+        serviceNom: demandeur.serviceNom,
+      }));
+      toast.success(`${t('val_validate')} — ${t('val_chargedTo')} ${demandeur.serviceNom}`, { icon: '✅' });
+      return;
+    }
+    setSessions(prev => prev.map(s => s.id !== id ? s : {
+      ...s,
+      statut: 'fermee',
+      validatedBy: user ? `${user.prenom} ${user.nom}` : undefined,
+    }));
     toast.success(t('val_validate'), { icon: '✅' });
   };
 
@@ -162,13 +198,55 @@ export default function ValidationPage() {
                       <Clock className="w-4 h-4 text-[#CC0000]" />
                       {new Date(session.heureDebut).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                     </div>
+                    {/* Session déjà imputée : on rappelle à quel service. */}
+                    {session.demandeurNom && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <Layers className="w-4 h-4 text-[#CC0000]" />
+                        {session.demandeurNom} · {session.serviceNom}
+                      </div>
+                    )}
                   </div>
+
+                  {/* Affectation du demandeur — uniquement à l'ouverture, et
+                      obligatoire : sans lui, aucun service ne porte les heures. */}
+                  {selectedTab === 'ouverture' && (
+                    <div className="mb-5">
+                      <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1.5">
+                        <UserSquare2 className="w-3.5 h-3.5" />
+                        {t('val_demandeur')}
+                      </label>
+                      {demandeurs.length === 0 ? (
+                        <p className="m-0 text-xs text-gray-400">{t('val_demandeurEmpty')}</p>
+                      ) : (
+                        <>
+                          <select
+                            value={demandeurParSession[session.id] ?? ''}
+                            onChange={e =>
+                              setDemandeurParSession(prev => ({ ...prev, [session.id]: e.target.value }))
+                            }
+                            className={inputCls}
+                          >
+                            <option value="">—</option>
+                            {demandeurs.map(d => (
+                              <option key={d.id} value={d.id}>
+                                {d.prenom} {d.nom} — {d.serviceNom}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="mt-1.5 mb-0 text-[11px] leading-relaxed text-gray-400">
+                            {t('val_demandeurDesc')}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  )}
 
                   <div className="flex gap-2">
                     <motion.button
                       whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                       onClick={() => validate(session.id, selectedTab === 'fermeture' ? 'fermeture' : 'ouverture')}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gradient-to-r from-[#CC0000] to-[#AA0000] hover:from-[#AA0000] hover:to-[#880000] text-white text-sm font-semibold transition-all"
+                      disabled={selectedTab === 'ouverture' && !demandeurParSession[session.id]}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gradient-to-r from-[#CC0000] to-[#AA0000] hover:from-[#AA0000] hover:to-[#880000] text-white text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       {t('val_validate')}

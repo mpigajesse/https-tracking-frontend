@@ -5,22 +5,25 @@ import type { AuditEntry, Lane } from "@/lib/mobile/types";
 import { useMobileT } from "@/lib/mobile/i18n";
 import { cn } from "@/lib/utils";
 
-/** Couleur de couloir BPMN : on lit d'un coup d'œil qui a agi. */
+/** Couleur de couloir : on lit d'un coup d'œil qui a agi. */
 const POINT_LANE: Record<Lane, string> = {
   interimaire: "bg-blue-500",
   systeme: "bg-purple-500",
+  societe: "bg-amber-500",
   valideur: "bg-[#CC0000]",
 };
 
 const TEXTE_LANE: Record<Lane, string> = {
   interimaire: "text-blue-600 dark:text-blue-400",
   systeme: "text-purple-600 dark:text-purple-400",
+  societe: "text-amber-600 dark:text-amber-400",
   valideur: "text-[#CC0000] dark:text-[#FF6666]",
 };
 
 const CLE_LANE = {
   interimaire: "lane_interimaire",
   systeme: "lane_systeme",
+  societe: "lane_societe",
   valideur: "lane_valideur",
 } as const;
 

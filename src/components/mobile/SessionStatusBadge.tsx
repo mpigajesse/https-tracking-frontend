@@ -18,10 +18,12 @@ const VARIANTE: Record<SessionStatus, Variant> = {
   ouverte: "success",
   en_pause: "info",
   pause_timeout: "danger",
+  sortie_temporaire: "info",
   en_litige: "danger",
   refusee: "danger",
   cloturee_validee: "success",
   cloturee_timeout: "danger",
+  cloturee_sortie_depassee: "danger",
   cloturee_auto: "warning",
 };
 

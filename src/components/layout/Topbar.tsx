@@ -13,6 +13,7 @@ import {
   Settings,
   User,
   Menu,
+  Download,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useI18n } from '@/lib/i18n';
@@ -31,7 +32,10 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
   const showInstallBtn =
     !isInstalled &&
-    (platform === 'desktop-chrome-edge' || platform === 'desktop-safari' || platform === 'desktop-other') &&
+    (platform === 'desktop-chrome' ||
+      platform === 'desktop-edge' ||
+      platform === 'desktop-safari' ||
+      platform === 'desktop-other') &&
     (deferredPrompt !== null || platform === 'desktop-safari');
 
   const handleLogout = () => {
@@ -100,7 +104,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
             <motion.button
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              onClick={platform === 'desktop-chrome-edge' ? triggerInstall : undefined}
+              onClick={deferredPrompt !== null ? triggerInstall : undefined}
               title={
                 platform === 'desktop-safari'
                   ? 'Partager → Ajouter au Dock'

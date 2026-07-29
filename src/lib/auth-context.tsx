@@ -57,10 +57,16 @@ export function useAuth() {
   return ctx;
 }
 
+/**
+ * Écran d'atterrissage de chaque rôle : celui de son geste principal dans le flux.
+ * Le technicien arrive sur sa file de validation, le réceptionniste sur le scan,
+ * la société sur ses dossiers.
+ */
 export function getDashboardRoute(role: UserRole): string {
   switch (role) {
     case 'admin': return '/dashboard';
-    case 'technicien': return '/interimaires';
+    case 'societe': return '/mes-interimaires';
+    case 'technicien': return '/validation';
     case 'receptionniste': return '/scan';
     case 'interimaire': return '/mon-dashboard';
     default: return '/dashboard';

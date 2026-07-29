@@ -6,7 +6,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { DataTable } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Modal } from '@/components/ui/Modal';
-import { mockInterimaires, Interimaire, SITES as DEFAULT_SITES, AGENCES, FONCTIONS, QRStatus } from '@/lib/data';
+import { mockInterimaires, mockSocietes, Interimaire, SITES as DEFAULT_SITES, AGENCES, FONCTIONS, QRStatus, TYPES_ACTIVITE, TypeActivite } from '@/lib/data';
 import {
   Plus, Search, Download, Upload, Edit2, Power, QrCode,
   UserCheck, Users, Building2, MapPin, Trash2, Settings2,
@@ -123,7 +123,9 @@ export default function InterimairesPage() {
 
   const [form, setForm] = useState({
     nom: '', prenom: '', cin: '', email: '', telephone: '',
-    agence: AGENCES[0], fonction: FONCTIONS[0], site: allSiteNames[0] || DEFAULT_SITES[0],
+    agence: AGENCES[0], fonction: FONCTIONS[0],
+    typeActivite: 'production' as TypeActivite,
+    site: allSiteNames[0] || DEFAULT_SITES[0],
     dateDebut: '', dateFin: '', statut: 'en_mission' as 'actif' | 'inactif' | 'en_mission',
   });
 
@@ -154,7 +156,7 @@ export default function InterimairesPage() {
 
   const handleAdd = () => {
     setEditItem(null);
-    setForm({ nom: '', prenom: '', cin: '', email: '', telephone: '', agence: AGENCES[0], fonction: FONCTIONS[0], site: allSiteNames[0] || DEFAULT_SITES[0], dateDebut: '', dateFin: '', statut: 'en_mission' });
+    setForm({ nom: '', prenom: '', cin: '', email: '', telephone: '', agence: AGENCES[0], fonction: FONCTIONS[0], typeActivite: 'production', site: allSiteNames[0] || DEFAULT_SITES[0], dateDebut: '', dateFin: '', statut: 'en_mission' });
     setShowModal(true);
   };
 
@@ -163,7 +165,21 @@ export default function InterimairesPage() {
       setData(prev => prev.map(i => i.id === editItem.id ? { ...i, ...form } : i));
       toast.success(t('inter_toast_edited'));
     } else {
-      const newItem: Interimaire = { id: `i${Date.now()}`, ...form, qrStatus: 'actif', totalHeures: 0 };
+      // Créé par l'admin, qui est aussi le valideur : le dossier naît validé,
+      // contrairement à un profil saisi par une société d'intérim.
+      const societe = mockSocietes.find(s => s.nom === form.agence);
+      const newItem: Interimaire = {
+        id: `i${Date.now()}`,
+        ...form,
+        societeId: societe?.id ?? mockSocietes[0].id,
+        qrStatus: 'actif',
+        totalHeures: 0,
+        statutProfil: 'valide',
+        documents: ['cin', 'assurance', 'contrat', 'medical'],
+        soumisLe: new Date().toISOString().slice(0, 10),
+        statueLe: new Date().toISOString().slice(0, 10),
+        statuePar: 'Administrateur',
+      };
       setData(prev => [...prev, newItem]);
       toast.success(t('inter_toast_added'));
     }
@@ -239,7 +255,7 @@ export default function InterimairesPage() {
             <QrCode className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={e => { e.stopPropagation(); setEditItem(i); setForm({ nom: i.nom, prenom: i.prenom, cin: i.cin, email: i.email, telephone: i.telephone, agence: i.agence, fonction: i.fonction, site: i.site, dateDebut: i.dateDebut, dateFin: i.dateFin, statut: i.statut }); setShowModal(true); }}
+            onClick={e => { e.stopPropagation(); setEditItem(i); setForm({ nom: i.nom, prenom: i.prenom, cin: i.cin, email: i.email, telephone: i.telephone, agence: i.agence, fonction: i.fonction, typeActivite: i.typeActivite, site: i.site, dateDebut: i.dateDebut, dateFin: i.dateFin, statut: i.statut }); setShowModal(true); }}
             className="p-1.5 rounded-lg text-gray-400 hover:text-[#CC0000] hover:bg-[#FFF0F0] dark:hover:bg-[#2A0000] transition-colors"
           ><Edit2 className="w-3.5 h-3.5" /></button>
           <button
@@ -515,6 +531,19 @@ export default function InterimairesPage() {
               </select>
             </div>
           ))}
+          {/* Champ à part : la valeur stockée est une clé, l'affichage un libellé. */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('activite_label')}</label>
+            <select
+              value={form.typeActivite}
+              onChange={e => setForm(p => ({ ...p, typeActivite: e.target.value as TypeActivite }))}
+              className={inputCls}
+            >
+              {Object.entries(TYPES_ACTIVITE).map(([cle, libelle]) => (
+                <option key={cle} value={cle}>{libelle}</option>
+              ))}
+            </select>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('inter_form_start')}</label>
             <input type="date" value={form.dateDebut} onChange={e => setForm(p => ({ ...p, dateDebut: e.target.value }))} className={inputCls} />

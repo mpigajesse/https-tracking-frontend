@@ -5,7 +5,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { mockAlerts, Alert, AlertType } from '@/lib/data';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Clock, Scale, CheckCheck, Trash2 } from 'lucide-react';
+import { AlertTriangle, Clock, Scale, CheckCheck, Trash2, LogOut, BadgeCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useI18n } from '@/lib/i18n';
 
@@ -13,12 +13,17 @@ const alertTypeIcon: Record<AlertType, React.ElementType> = {
   non_cloturee: Clock,
   depassement_48h: AlertTriangle,
   en_litige: Scale,
+  sortie_depassee: LogOut,
+  profil_a_valider: BadgeCheck,
 };
 
 const alertTypeColor: Record<AlertType, string> = {
-  non_cloturee:    'text-[#CC0000] bg-[#FFF0F0] dark:bg-[#2A0000]',
-  depassement_48h: 'text-[#CC0000] bg-[#FFF0F0] dark:bg-[#2A0000]',
-  en_litige:       'text-[#CC0000] bg-[#FFF0F0] dark:bg-[#2A0000]',
+  non_cloturee:     'text-[#CC0000] bg-[#FFF0F0] dark:bg-[#2A0000]',
+  depassement_48h:  'text-[#CC0000] bg-[#FFF0F0] dark:bg-[#2A0000]',
+  en_litige:        'text-[#CC0000] bg-[#FFF0F0] dark:bg-[#2A0000]',
+  sortie_depassee:  'text-[#CC0000] bg-[#FFF0F0] dark:bg-[#2A0000]',
+  // Un dossier à valider est une tâche, pas un incident : ton neutre assumé.
+  profil_a_valider: 'text-violet-600 bg-violet-50 dark:text-violet-300 dark:bg-violet-950/40',
 };
 
 export default function AlertesPage() {
@@ -39,15 +44,18 @@ export default function AlertesPage() {
   };
 
   const alertTypeLabel: Record<AlertType, string> = {
-    non_cloturee:    t('alert_non_cloturee'),
-    depassement_48h: t('alert_depassement'),
-    en_litige:       t('alert_litige'),
+    non_cloturee:     t('alert_non_cloturee'),
+    depassement_48h:  t('alert_depassement'),
+    en_litige:        t('alert_litige'),
+    sortie_depassee:  t('alert_sortie_depassee'),
+    profil_a_valider: t('alert_profil_a_valider'),
   };
 
   const summaryCards = [
     { type: 'non_cloturee'    as AlertType, label: t('alert_non_cloturee'), icon: Clock          },
     { type: 'depassement_48h' as AlertType, label: t('alert_depassement'),  icon: AlertTriangle  },
     { type: 'en_litige'       as AlertType, label: t('alert_litige'),       icon: Scale          },
+    { type: 'sortie_depassee' as AlertType, label: t('alert_sortie_depassee'), icon: LogOut      },
   ];
 
   return (

@@ -226,11 +226,15 @@ function LoginForm() {
     setLoading(false);
   };
 
+  /* Les cinq comptes suivent l'ordre du flux : l'admin crée la société, la
+     société saisit les profils, l'admin valide, le réceptionniste scanne,
+     le technicien valide la session. */
   const demoAccounts = [
     { role: lang === 'fr' ? 'Admin' : 'Admin', email: 'admin@pointage.ma', password: 'admin123', color: 'bg-[#CC0000]' },
-    { role: lang === 'fr' ? 'Technicien' : 'Technician', email: 'tech@pointage.ma', password: 'tech123', color: 'bg-[#555555]' },
-    { role: lang === 'fr' ? 'Réceptionniste' : 'Receptionist', email: 'recep@pointage.ma', password: 'recep123', color: 'bg-[#888888]' },
-    { role: lang === 'fr' ? 'Intérimaire' : 'Worker', email: 'interim@pointage.ma', password: 'interim123', color: 'bg-[#6B7280]' },
+    { role: lang === 'fr' ? "Société d'intérim" : 'Staffing agency', email: 'societe@pointage.ma', password: 'societe123', color: 'bg-violet-500' },
+    { role: lang === 'fr' ? 'Réceptionniste' : 'Receptionist', email: 'recep@pointage.ma', password: 'recep123', color: 'bg-amber-500' },
+    { role: lang === 'fr' ? 'Technicien' : 'Technician', email: 'tech@pointage.ma', password: 'tech123', color: 'bg-emerald-500' },
+    { role: lang === 'fr' ? 'Intérimaire' : 'Worker', email: 'interim@pointage.ma', password: 'interim123', color: 'bg-blue-500' },
   ];
 
   return (
