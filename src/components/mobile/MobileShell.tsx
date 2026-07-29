@@ -9,7 +9,7 @@ import { BottomNav } from "./BottomNav";
 const ROUTES_PUBLIQUES = ["/m/login"];
 
 export function MobileShell({ children }: { children: React.ReactNode }) {
-  const { pret, compte, sessions } = useMobileStore();
+  const { pret, compte, sessions, nonLues } = useMobileStore();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -23,14 +23,20 @@ export function MobileShell({ children }: { children: React.ReactNode }) {
 
   /* Compteurs de la barre de navigation : ce qui attend une action humaine. */
   const badges = useMemo<Record<string, number>>(() => {
-    if (!compte) return {};
+    if (!compte) return {} as Record<string, number>;
     const aValider = sessions.filter(
       (s) => s.statut === "en_attente_ouverture" || s.statut === "en_attente_cloture",
     ).length;
-    const alertes = sessions.filter((s) => s.statut === "pause_timeout" || s.statut === "en_litige").length;
-    const compteurs: Record<string, number> = { "/m": aValider, "/m/alertes": alertes };
-    return compteurs;
-  }, [compte, sessions]);
+    // Une sortie en cours n'est pas une alerte : elle le devient au dépassement,
+    // et la session bascule alors en `cloturee_sortie_depassee`.
+    const alertes = sessions.filter(
+      (s) => s.statut === "pause_timeout" || s.statut === "en_litige",
+    ).length;
+    return {
+      "/m": aValider,
+      "/m/alertes": Math.max(alertes, nonLues),
+    };
+  }, [compte, sessions, nonLues]);
 
   if (!pret) {
     return (
@@ -48,7 +54,7 @@ export function MobileShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="m-viewport bg-[#F5F5F5] dark:bg-[#111111]">
       {children}
-      {compte && !publique && <BottomNav badges={badges} />}
+      {compte && !publique && <BottomNav role={compte.role} badges={badges} />}
     </div>
   );
 }

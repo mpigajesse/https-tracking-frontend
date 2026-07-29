@@ -6,12 +6,21 @@
  * dépendance React — de façon à rester vérifiable indépendamment de l'UI.
  */
 
-import { MOTIFS_CTRL_AUTO } from "./constants";
-import { calculeDuree, calculeEcheance, formatDuree, formatHeure, pauseEnCours } from "./time";
+import { MOTIFS_CTRL_AUTO, MOTIFS_SORTIE, SORTIE_TEMP_TIMEOUT_MIN } from "./constants";
+import {
+  calculeDuree,
+  calculeEcheance,
+  calculeEcheanceSortie,
+  formatDuree,
+  formatHeure,
+  pauseEnCours,
+  sortieEnCours,
+} from "./time";
 import type {
   AuditEntry,
   CtrlAutoFailure,
   Lane,
+  MotifSortieTemporaire,
   ScanDisponible,
   ScanKind,
   Session,
@@ -22,10 +31,33 @@ import type {
 
 export type SessionEvent =
   /** Scan QR émis par l'intérimaire (hors scan d'entrée, qui crée la session). */
-  | { type: "SCAN"; kind: Exclude<ScanKind, "entree">; at: string }
+  | { type: "SCAN"; kind: Exclude<ScanKind, "entree" | "sortie_temporaire">; at: string }
+  /** Sortie temporaire déclarée : chantier ou course, 15 minutes maximum. */
+  | {
+      type: "SCAN_SORTIE_TEMPORAIRE";
+      motif: MotifSortieTemporaire;
+      at: string;
+      precision?: string;
+      /** Site rejoint, s'il diffère du site de la session (cas rare). */
+      siteDestination?: string;
+    }
+  /** Minuterie système : les 15 minutes de sortie temporaire sont écoulées. */
+  | { type: "SORTIE_TIMEOUT"; at: string }
   /** Contrôles automatiques du système en échec → refus immédiat. */
   | { type: "CTRL_AUTO_KO"; cause: CtrlAutoFailure; at: string }
-  | { type: "VALIDER_OUVERTURE"; at: string; par: string }
+  /**
+   * Validation d'ouverture par le technicien. C'est à ce moment qu'un
+   * demandeur est affecté à la session : la validation et l'imputation sont
+   * une seule et même décision.
+   */
+  | {
+      type: "VALIDER_OUVERTURE";
+      at: string;
+      par: string;
+      demandeurId: string;
+      demandeurNom: string;
+      serviceNom: string;
+    }
   | { type: "REFUSER_OUVERTURE"; at: string; par: string; motif: string }
   /** Minuterie système : échéance de retour de pause dépassée. */
   | { type: "PAUSE_TIMEOUT"; at: string }
@@ -56,7 +88,10 @@ export type ErreurCode =
   | "err_justifRequired"
   | "err_notAwaitingClose"
   | "err_alreadyClosed"
-  | "err_ctrlEntryOnly";
+  | "err_ctrlEntryOnly"
+  | "err_noSortie"
+  | "err_endSortieFirst"
+  | "err_demandeurRequired";
 
 export type TransitionResult =
   | { ok: true; session: Session }
@@ -74,10 +109,12 @@ export const CLE_STATUT: Record<SessionStatus, string> = {
   ouverte: "st_ouverte",
   en_pause: "st_en_pause",
   pause_timeout: "st_pause_timeout",
+  sortie_temporaire: "st_sortie_temporaire",
   en_attente_cloture: "st_en_attente_cloture",
   en_litige: "st_en_litige",
   cloturee_validee: "st_cloturee_validee",
   cloturee_timeout: "st_cloturee_timeout",
+  cloturee_sortie_depassee: "st_cloturee_sortie_depassee",
   cloturee_auto: "st_cloturee_auto",
 };
 
@@ -85,6 +122,8 @@ export const CLE_SCAN: Record<ScanKind, string> = {
   entree: "scan_entree",
   depart_pause: "scan_depart_pause",
   retour_pause: "scan_retour_pause",
+  sortie_temporaire: "scan_sortie_temporaire",
+  retour_sortie: "scan_retour_sortie",
   sortie: "scan_sortie",
 };
 
@@ -96,6 +135,7 @@ export function tonStatut(statut: SessionStatus): "attente" | "actif" | "alerte"
       return "attente";
     case "ouverte":
     case "en_pause":
+    case "sortie_temporaire":
       return "actif";
     case "pause_timeout":
     case "en_litige":
@@ -104,6 +144,7 @@ export function tonStatut(statut: SessionStatus): "attente" | "actif" | "alerte"
     case "cloturee_validee":
       return "valide";
     case "cloturee_timeout":
+    case "cloturee_sortie_depassee":
     case "cloturee_auto":
       return "alerte";
   }
@@ -159,15 +200,23 @@ export function creerSession(params: {
     id: nouvelId("S"),
     interimaireId,
     site,
+    // Le site de scan devient le site imputé, et le reste quoi qu'il arrive.
+    siteFacturation: site,
     debut: at,
     statut: "en_attente_ouverture",
     pauses: [],
+    sorties: [],
     aVerifier: false,
     audit: [
       log(at, "interimaire", `Scan d'entrée — site ${site}`, "neutre"),
-      log(at, "systeme", "Contrôles auto : QR valide · statut actif · aucune session ouverte", "ok"),
+      log(
+        at,
+        "systeme",
+        "Contrôles auto : QR valide · profil validé par l'admin · aucune session ouverte",
+        "ok",
+      ),
       log(at, "systeme", "Session créée — horodatage serveur", "neutre"),
-      log(at, "valideur", "Notification envoyée au valideur (photo + infos du jour)", "neutre"),
+      log(at, "valideur", "Notification envoyée au technicien (photo + infos du jour)", "neutre"),
     ],
   };
 }
@@ -188,10 +237,13 @@ export function creerSessionRefusee(params: {
     id: nouvelId("S"),
     interimaireId,
     site,
+    // Le site de scan devient le site imputé, et le reste quoi qu'il arrive.
+    siteFacturation: site,
     debut: at,
     fin: at,
     statut: "refusee",
     pauses: [],
+    sorties: [],
     aVerifier: false,
     motif,
     audit: [
@@ -211,11 +263,28 @@ export function appliquer(session: Session, evt: SessionEvent): TransitionResult
       if (session.statut !== "en_attente_ouverture") {
         return refus("err_notAwaitingOpen");
       }
+      // Sans demandeur, les heures ne pourraient être imputées à aucun service :
+      // l'affectation est donc une condition de la validation, pas une option.
+      if (!evt.demandeurId) return refus("err_demandeurRequired");
       return transite(
         session,
-        { statut: "ouverte", ouvertureValideeA: session.debut, valideParOuverture: evt.par },
+        {
+          statut: "ouverte",
+          ouvertureValideeA: session.debut,
+          valideParOuverture: evt.par,
+          demandeurId: evt.demandeurId,
+          demandeurNom: evt.demandeurNom,
+          serviceNom: evt.serviceNom,
+        },
         [
           log(evt.at, "valideur", "Identité validée (photo · CIN · assurance)", "ok", evt.par),
+          log(
+            evt.at,
+            "valideur",
+            `Demandeur affecté — ${evt.demandeurNom} · service ${evt.serviceNom}`,
+            "ok",
+            evt.par,
+          ),
           log(
             evt.at,
             "systeme",
@@ -261,6 +330,33 @@ export function appliquer(session: Session, evt: SessionEvent): TransitionResult
         ]);
       }
 
+      if (evt.kind === "retour_sortie") {
+        if (session.statut !== "sortie_temporaire") return refus("err_noSortie");
+        const courante = sortieEnCours(session);
+        if (!courante) return refus("err_noSortie");
+        const sorties = session.sorties.map((s) =>
+          s.id === courante.id ? { ...s, fin: evt.at } : s,
+        );
+        const duree = new Date(evt.at).getTime() - new Date(courante.debut).getTime();
+        const journalRetour = [
+          log(evt.at, "interimaire", `Scan — retour de ${MOTIFS_SORTIE[courante.motif]}`, "neutre"),
+          log(evt.at, "systeme", `Retour dans les délais · absence ${formatDuree(duree)} · reprise`, "ok"),
+        ];
+        // Le retour dans les temps confirme la règle : rien ne bascule sur le
+        // site visité, la totalité de la session reste au site de départ.
+        if (courante.siteDestination) {
+          journalRetour.push(
+            log(
+              evt.at,
+              "systeme",
+              `Passage par ${courante.siteDestination} · session intégralement comptabilisée sur ${session.siteFacturation}`,
+              "ok",
+            ),
+          );
+        }
+        return transite(session, { statut: "ouverte", sorties }, journalRetour);
+      }
+
       if (evt.kind === "retour_pause") {
         if (session.statut !== "en_pause") {
           return session.statut === "pause_timeout"
@@ -277,23 +373,116 @@ export function appliquer(session: Session, evt: SessionEvent): TransitionResult
         ]);
       }
 
-      // sortie
+      // sortie définitive — fin de journée
       if (session.statut !== "ouverte") {
-        return session.statut === "en_pause" || session.statut === "pause_timeout"
-          ? refus("err_endPauseFirst")
-          : refus("err_noOpenSession");
+        if (session.statut === "en_pause" || session.statut === "pause_timeout") {
+          return refus("err_endPauseFirst");
+        }
+        if (session.statut === "sortie_temporaire") return refus("err_endSortieFirst");
+        return refus("err_noOpenSession");
       }
       const provisoire = calculeDuree({ ...session, fin: evt.at }, new Date(evt.at).getTime());
       return transite(session, { statut: "en_attente_cloture", fin: evt.at }, [
-        log(evt.at, "interimaire", "Scan — sortie", "neutre"),
+        log(evt.at, "interimaire", "Scan — sortie · fin de journée", "neutre"),
         log(evt.at, "systeme", "Session ouverte confirmée · cohérence de durée vérifiée", "ok"),
         log(
           evt.at,
           "valideur",
-          `Notification de clôture — ${formatDuree(provisoire.brutMs)} brut calculé`,
+          `Notification de clôture au technicien — ${formatDuree(provisoire.brutMs)} brut calculé`,
           "neutre",
         ),
       ]);
+    }
+
+    /* — Couloir intérimaire : sortie temporaire (chantier ou course) — */
+    case "SCAN_SORTIE_TEMPORAIRE": {
+      if (session.statut !== "ouverte") {
+        if (session.statut === "en_pause" || session.statut === "pause_timeout") {
+          return refus("err_endPauseFirst");
+        }
+        return refus("err_needOpenSession");
+      }
+      // Un changement de site est possible, mais reste sans effet sur
+      // l'imputation : `siteFacturation` n'est jamais réécrit ici.
+      const changeDeSite = Boolean(evt.siteDestination && evt.siteDestination !== session.site);
+      const sortie = {
+        id: nouvelId("X"),
+        motif: evt.motif,
+        debut: evt.at,
+        echeance: calculeEcheanceSortie(evt.at),
+        precision: evt.precision,
+        siteDestination: changeDeSite ? evt.siteDestination : undefined,
+      };
+      const libelle = MOTIFS_SORTIE[evt.motif];
+
+      const journal = [
+        log(
+          evt.at,
+          "interimaire",
+          `Scan — sortie ${libelle.toLowerCase()}${evt.precision ? ` · ${evt.precision}` : ""}`,
+          "neutre",
+        ),
+        log(
+          evt.at,
+          "systeme",
+          `Sortie temporaire · ${SORTIE_TEMP_TIMEOUT_MIN} min accordées · retour avant ${formatHeure(sortie.echeance)}`,
+          "neutre",
+        ),
+      ];
+
+      if (changeDeSite) {
+        journal.push(
+          log(
+            evt.at,
+            "systeme",
+            `Changement de site vers ${evt.siteDestination} · heures maintenues sur ${session.siteFacturation} (règle du site de départ)`,
+            "alerte",
+          ),
+        );
+      }
+
+      return transite(
+        session,
+        { statut: "sortie_temporaire", sorties: [...session.sorties, sortie] },
+        journal,
+      );
+    }
+
+    /* — Couloir système : dépassement des 15 minutes → clôture d'office — */
+    case "SORTIE_TIMEOUT": {
+      if (session.statut !== "sortie_temporaire") return refus("err_noSortie");
+      const courante = sortieEnCours(session);
+      if (!courante) return refus("err_noSortie");
+      // La session s'arrête à l'heure du départ : le temps hors site n'est pas payé.
+      const sorties = session.sorties.map((s) =>
+        s.id === courante.id ? { ...s, fin: courante.debut, depassee: true } : s,
+      );
+      const libelle = MOTIFS_SORTIE[courante.motif];
+      return transite(
+        session,
+        {
+          statut: "cloturee_sortie_depassee",
+          fin: courante.debut,
+          sorties,
+          aVerifier: true,
+          motif: `Dépassement du délai de ${SORTIE_TEMP_TIMEOUT_MIN} min — sortie ${libelle.toLowerCase()}`,
+        },
+        [
+          log(
+            evt.at,
+            "systeme",
+            `ALERTE — aucun retour ${SORTIE_TEMP_TIMEOUT_MIN} min après la sortie ${libelle.toLowerCase()} de ${formatHeure(courante.debut)}`,
+            "alerte",
+          ),
+          log(
+            evt.at,
+            "systeme",
+            `Session fermée automatiquement · fin fixée à ${formatHeure(courante.debut)}`,
+            "alerte",
+          ),
+          log(evt.at, "valideur", "Flag « À vérifier » — régularisation attendue", "neutre"),
+        ],
+      );
     }
 
     /* — Couloir système : minuterie de pause — */
@@ -395,7 +584,7 @@ export function appliquer(session: Session, evt: SessionEvent): TransitionResult
         log(
           evt.at,
           "systeme",
-          `Temps réel = ${formatDuree(d.brutMs)} − ${formatDuree(d.pausesMs)} = ${formatDuree(d.netMs)}`,
+          `Temps réel = ${formatDuree(d.brutMs)} − ${formatDuree(d.pausesMs)} pause − ${formatDuree(d.sortiesMs)} sortie = ${formatDuree(d.netMs)}`,
           "ok",
         ),
         log(evt.at, "systeme", "Session CLÔTURÉE / VALIDÉE", "ok"),
@@ -414,12 +603,19 @@ export function appliquer(session: Session, evt: SessionEvent): TransitionResult
 
     /* — Couloir système : clôture forcée du jour comptable — */
     case "CLOTURE_AUTO": {
-      const ouvrables: SessionStatus[] = ["ouverte", "en_pause", "pause_timeout", "en_attente_cloture"];
+      const ouvrables: SessionStatus[] = [
+        "ouverte",
+        "en_pause",
+        "pause_timeout",
+        "sortie_temporaire",
+        "en_attente_cloture",
+      ];
       if (!ouvrables.includes(session.statut)) return refus("err_alreadyClosed");
       const pauses = session.pauses.map((p) => (p.fin ? p : { ...p, fin: evt.at }));
+      const sorties = session.sorties.map((s) => (s.fin ? s : { ...s, fin: evt.at }));
       return transite(
         session,
-        { statut: "cloturee_auto", fin: evt.at, pauses, aVerifier: true },
+        { statut: "cloturee_auto", fin: evt.at, pauses, sorties, aVerifier: true },
         [
           log(evt.at, "systeme", "23:30 — jour comptable clos · session encore ouverte", "alerte"),
           log(evt.at, "systeme", "Clôture forcée · flag « À vérifier »", "alerte"),
@@ -452,7 +648,11 @@ export function scanDisponible(session: Session | undefined): ScanDisponible {
         raisonKey: "act_awaitValidationWhy",
       };
     case "ouverte":
-      return { kind: "depart_pause", libelleKey: "act_depart_pause", actif: true };
+      // Session en cours : le geste par défaut est la sortie, l'intérimaire
+      // choisira ensuite son motif (fin de journée, chantier ou course).
+      return { kind: "sortie", libelleKey: "act_sortie", actif: true };
+    case "sortie_temporaire":
+      return { kind: "retour_sortie", libelleKey: "act_retour_sortie", actif: true };
     case "en_pause":
       return { kind: "retour_pause", libelleKey: "act_retour_pause", actif: true };
     case "pause_timeout":
@@ -481,5 +681,10 @@ export function scanDisponible(session: Session | undefined): ScanDisponible {
 
 /** Une session ouverte peut aussi être clôturée par scan de sortie depuis l'état « ouverte ». */
 export function peutScannerSortie(session: Session | undefined): boolean {
+  return session?.statut === "ouverte";
+}
+
+/** Une pause repas ne peut être déclarée que depuis une session pleinement ouverte. */
+export function peutPrendrePause(session: Session | undefined): boolean {
   return session?.statut === "ouverte";
 }

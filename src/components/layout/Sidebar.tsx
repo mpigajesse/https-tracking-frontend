@@ -19,6 +19,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Building2,
+  Briefcase,
+  BadgeCheck,
+  Layers,
+  UserSquare2,
+  Radio,
   LogOut,
   Smartphone,
   ExternalLink,
@@ -36,24 +41,39 @@ interface NavItem {
   badge?: number;
 }
 
+/**
+ * Navigation par rôle, dans l'ordre du flux métier.
+ *
+ * L'admin pilote l'onboarding (sociétés puis validation des dossiers), la
+ * société saisit ses profils, le réceptionniste scanne, le technicien valide
+ * les sessions. L'intérimaire ne voit que trois entrées : son interface est
+ * volontairement réduite à l'essentiel.
+ */
 const navItems: NavItem[] = [
-  { labelKey: 'nav_dashboard',     href: '/dashboard',     icon: LayoutDashboard, roles: ['admin'] },
-  { labelKey: 'nav_users',         href: '/utilisateurs',  icon: Users,           roles: ['admin'] },
-  { labelKey: 'nav_sites',         href: '/sites',         icon: Building2,       roles: ['admin'] },
-  { labelKey: 'nav_alerts',        href: '/alertes',       icon: Bell,            roles: ['admin'], badge: 4 },
-  { labelKey: 'nav_interimaires',  href: '/interimaires',  icon: UserCheck,       roles: ['admin', 'technicien'] },
-  { labelKey: 'nav_qrcodes',       href: '/qr-codes',      icon: QrCode,          roles: ['technicien'] },
-  { labelKey: 'nav_validation',    href: '/validation',    icon: CheckSquare,     roles: ['admin', 'technicien'] },
-  { labelKey: 'nav_scan',          href: '/scan',          icon: Camera,          roles: ['receptionniste'] },
-  { labelKey: 'nav_presents',      href: '/presents',      icon: ClipboardList,   roles: ['receptionniste'] },
-  { labelKey: 'nav_my_dashboard',  href: '/mon-dashboard', icon: LayoutDashboard, roles: ['interimaire'] },
-  { labelKey: 'nav_my_sessions',   href: '/mes-sessions',  icon: History,         roles: ['interimaire'] },
-  { labelKey: 'nav_my_qr',         href: '/mon-qr',        icon: QrCode,          roles: ['interimaire'] },
-  { labelKey: 'nav_settings',      href: '/parametres',    icon: Settings,        roles: ['admin', 'technicien', 'receptionniste', 'interimaire'] },
+  { labelKey: 'nav_dashboard',       href: '/dashboard',        icon: LayoutDashboard, roles: ['admin'] },
+  { labelKey: 'nav_societes',        href: '/societes',         icon: Briefcase,       roles: ['admin'] },
+  { labelKey: 'nav_profils',         href: '/validation-profils', icon: BadgeCheck,    roles: ['admin'] },
+  { labelKey: 'svc_title',           href: '/services',         icon: Layers,          roles: ['admin'] },
+  { labelKey: 'dem_title',           href: '/demandeurs',       icon: UserSquare2,     roles: ['admin'] },
+  { labelKey: 'nav_users',           href: '/utilisateurs',     icon: Users,           roles: ['admin'] },
+  { labelKey: 'nav_sites',           href: '/sites',            icon: Building2,       roles: ['admin'] },
+  { labelKey: 'dispo_title',         href: '/disponibilite',    icon: Radio,           roles: ['admin', 'technicien'] },
+  { labelKey: 'nav_alerts',          href: '/alertes',          icon: Bell,            roles: ['admin', 'technicien'] },
+  { labelKey: 'nav_interimaires',    href: '/interimaires',     icon: UserCheck,       roles: ['admin', 'technicien'] },
+  { labelKey: 'nav_my_interimaires', href: '/mes-interimaires', icon: UserCheck,       roles: ['societe'] },
+  { labelKey: 'nav_qrcodes',         href: '/qr-codes',         icon: QrCode,          roles: ['admin', 'technicien'] },
+  { labelKey: 'nav_validation',      href: '/validation',       icon: CheckSquare,     roles: ['admin', 'technicien'] },
+  { labelKey: 'nav_scan',            href: '/scan',             icon: Camera,          roles: ['receptionniste'] },
+  { labelKey: 'nav_presents',        href: '/presents',         icon: ClipboardList,   roles: ['receptionniste', 'technicien'] },
+  { labelKey: 'nav_my_dashboard',    href: '/mon-dashboard',    icon: LayoutDashboard, roles: ['interimaire'] },
+  { labelKey: 'nav_my_qr',           href: '/mon-qr',           icon: QrCode,          roles: ['interimaire'] },
+  { labelKey: 'nav_my_sessions',     href: '/mes-sessions',     icon: History,         roles: ['interimaire'] },
+  { labelKey: 'nav_settings',        href: '/parametres',       icon: Settings,        roles: ['admin', 'societe', 'technicien', 'receptionniste', 'interimaire'] },
 ];
 
 const roleColorMap: Record<UserRole, string> = {
   admin:          'bg-[#CC0000]',
+  societe:        'bg-violet-500',
   technicien:     'bg-green-500',
   receptionniste: 'bg-amber-500',
   interimaire:    'bg-blue-500',
@@ -61,6 +81,7 @@ const roleColorMap: Record<UserRole, string> = {
 
 const roleKeyMap: Record<UserRole, TranslationKey> = {
   admin:          'role_admin',
+  societe:        'role_societe',
   technicien:     'role_technicien',
   receptionniste: 'role_receptionniste',
   interimaire:    'role_interimaire',
@@ -345,7 +366,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
           Surface applicative distincte (poste terrain), pas une page de l'app web :
           elle est donc présentée à part de la navigation, et réservée aux profils
           qui tiennent réellement un poste. */}
-      {user && (user.role === 'admin' || user.role === 'receptionniste') && (
+      {user && user.role !== 'interimaire' && (
         <div className="relative px-2 pb-2 z-10">
           <Link href="/m" onClick={isMobile ? onMobileClose : undefined}>
             <motion.div

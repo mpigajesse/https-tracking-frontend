@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
 import { useMobileStore } from "@/lib/mobile/store";
-import { MOBILE_ACCOUNTS, MOBILE_CREDENTIALS } from "@/lib/mobile/mock-data";
+import { LIBELLE_ROLE, MOBILE_ACCOUNTS, MOBILE_CREDENTIALS } from "@/lib/mobile/mock-data";
 import { useMobileT } from "@/lib/mobile/i18n";
 
 export default function LoginPage() {
@@ -123,7 +123,7 @@ export default function LoginPage() {
                   {a.prenom} {a.nom}
                 </span>
                 <span className="block text-xs text-gray-500 dark:text-gray-400">
-                  {t(a.role === "admin" ? "role_admin" : "role_receptionniste")} · {a.site}
+                  {LIBELLE_ROLE[a.role]} · {a.site}
                 </span>
               </span>
               <span className="m-num shrink-0 text-xs font-semibold text-[#CC0000]">{a.matricule}</span>

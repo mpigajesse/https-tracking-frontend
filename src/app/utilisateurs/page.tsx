@@ -13,9 +13,10 @@ import { useI18n } from '@/lib/i18n';
 
 const roleBadge: Record<UserRole, 'danger' | 'success' | 'info' | 'warning'> = {
   admin: 'danger',
+  societe: 'info',
   technicien: 'success',
-  receptionniste: 'info',
-  interimaire: 'warning',
+  receptionniste: 'warning',
+  interimaire: 'info',
 };
 
 const inputCls = 'w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-[#2A2A2A] bg-white dark:bg-[#1C1C1C] text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#CC0000]';
@@ -35,6 +36,7 @@ export default function UtilisateursPage() {
 
   const roleLabels: Record<UserRole, string> = {
     admin: t('users_role_admin'),
+    societe: t('role_societe'),
     technicien: t('users_role_tech'),
     receptionniste: t('users_role_recep'),
     interimaire: t('users_role_interim'),

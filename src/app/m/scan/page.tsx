@@ -7,15 +7,16 @@ import toast from "react-hot-toast";
 import { TopBar } from "@/components/mobile/TopBar";
 import { ScanViewfinder } from "@/components/mobile/ScanViewfinder";
 import { ScanSimulation } from "@/components/mobile/ScanSimulation";
+import { SortieMotifSheet } from "@/components/mobile/SortieMotifSheet";
 import { CLE_SCAN, scanDisponible } from "@/lib/mobile/session-machine";
 import { useMobileT, type MobileKey, type MobileT } from "@/lib/mobile/i18n";
-import { MOTIFS_CTRL_AUTO } from "@/lib/mobile/constants";
-import { INTERIMAIRES } from "@/lib/mobile/mock-data";
+import { MOTIFS_CTRL_AUTO, MOTIFS_SORTIE } from "@/lib/mobile/constants";
+import { SITES_CONNUS } from "@/lib/mobile/mock-data";
 import { useMobileStore } from "@/lib/mobile/store";
 import {
-  TOUS_SITES,
   type CtrlAutoFailure,
   type InterimaireProfil,
+  type MotifSortie,
   type ScanKind,
 } from "@/lib/mobile/types";
 import { cn } from "@/lib/utils";
@@ -32,25 +33,24 @@ type Lecture = { profil: InterimaireProfil; kind: ScanKind } | null;
  * l'opérateur n'a jamais à le choisir, ce qui supprime toute saisie erronée.
  */
 export default function ScanPage() {
-  const { compte, sessionActive, scannerEntree, envoyer } = useMobileStore();
+  const { compte, interimaires, sessionActive, scannerEntree, envoyer } = useMobileStore();
   const { t } = useMobileT();
   const router = useRouter();
   const [recherche, setRecherche] = useState("");
   const [lecture, setLecture] = useState<Lecture>(null);
   const [echecSimule, setEchecSimule] = useState<CtrlAutoFailure | "">("");
+  /** Profil dont on attend le motif de sortie, après lecture du QR. */
+  const [sortiePour, setSortiePour] = useState<InterimaireProfil | null>(null);
 
+  /* Le cloisonnement par site est fait par le store ; il ne reste ici que la
+     recherche textuelle. */
   const portee = useMemo(() => {
-    if (!compte) return [];
-    const visibles =
-      compte.role === "admin" || compte.site === TOUS_SITES
-        ? INTERIMAIRES
-        : INTERIMAIRES.filter((i) => i.site === compte.site);
     const q = recherche.trim().toLowerCase();
-    if (!q) return visibles;
-    return visibles.filter((i) =>
+    if (!q) return interimaires;
+    return interimaires.filter((i) =>
       `${i.prenom} ${i.nom} ${i.fonction} ${i.agence} ${i.cin}`.toLowerCase().includes(q),
     );
-  }, [compte, recherche]);
+  }, [interimaires, recherche]);
 
   /* Le scan n'est enregistré qu'à la fin de la lecture du QR, jamais au tap :
      l'ordre reflète le geste réel au poste. */
@@ -63,13 +63,24 @@ export default function ScanPage() {
     if (kind === "entree") {
       const creee = scannerEntree(profil.id, profil.site, echecSimule || undefined);
       if (creee.statut === "refusee") {
-        toast.error(`${t("scan_refused")} — ${MOTIFS_CTRL_AUTO[echecSimule as CtrlAutoFailure]}`);
+        // Le motif vient de la session : les contrôles réels priment sur la simulation.
+        toast.error(`${t("scan_refused")} — ${creee.motif ?? ""}`);
         return;
       }
       toast.success(t("scan_entryOk"));
       router.push("/m");
       return;
     }
+
+    // Une sortie appelle d'abord un motif : fin de journée, chantier ou course.
+    if (kind === "sortie") {
+      setSortiePour(profil);
+      return;
+    }
+
+    // Une sortie temporaire ne s'atteint que par le choix de motif ci-dessus :
+    // `scanDisponible` ne propose jamais ce type directement.
+    if (kind === "sortie_temporaire") return;
 
     const session = sessionActive(profil.id);
     if (!session) {
@@ -82,8 +93,42 @@ export default function ScanPage() {
       return;
     }
     toast.success(`${t(CLE_SCAN[kind] as MobileKey)} — ${t("scan_recorded")}`);
-    if (kind === "sortie") router.push("/m");
   }, [lecture, echecSimule, scannerEntree, sessionActive, envoyer, router, t]);
+
+  /** Applique le motif choisi : clôture de la journée, ou suspension de 15 min. */
+  const confirmerSortie = useCallback(
+    (motif: MotifSortie, precision?: string, siteDestination?: string) => {
+      const profil = sortiePour;
+      setSortiePour(null);
+      if (!profil) return;
+
+      const session = sessionActive(profil.id);
+      if (!session) {
+        toast.error(t("scan_noSession"));
+        return;
+      }
+      const at = new Date().toISOString();
+
+      const r =
+        motif === "fin_journee"
+          ? envoyer(session.id, { type: "SCAN", kind: "sortie", at })
+          : envoyer(session.id, {
+              type: "SCAN_SORTIE_TEMPORAIRE",
+              motif,
+              at,
+              precision,
+              siteDestination,
+            });
+
+      if (!r.ok) {
+        toast.error(t(r.erreur));
+        return;
+      }
+      toast.success(t("sortie_registered", { motif: MOTIFS_SORTIE[motif].toLowerCase() }));
+      if (motif === "fin_journee") router.push("/m");
+    },
+    [sortiePour, sessionActive, envoyer, router, t],
+  );
 
   if (!compte) return null;
 
@@ -183,6 +228,14 @@ export default function ScanPage() {
           onAnnuler={() => setLecture(null)}
         />
       )}
+
+      <SortieMotifSheet
+        ouvert={sortiePour !== null}
+        onFermer={() => setSortiePour(null)}
+        siteSession={sortiePour?.site ?? compte.site}
+        sites={SITES_CONNUS}
+        onConfirmer={confirmerSortie}
+      />
     </>
   );
 }

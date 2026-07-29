@@ -4,14 +4,27 @@ import Link from "next/link";
 import { Clock, UsersRound } from "lucide-react";
 import { TopBar } from "@/components/mobile/TopBar";
 import { SessionStatusBadge } from "@/components/mobile/SessionStatusBadge";
+import { SortieCountdown } from "@/components/mobile/SortieCountdown";
 import { trouveInterimaire } from "@/lib/mobile/mock-data";
 import { useMobileStore } from "@/lib/mobile/store";
 import { useMobileT } from "@/lib/mobile/i18n";
-import { calculeDuree, formatChrono, formatHeure } from "@/lib/mobile/time";
+import { calculeDuree, formatChrono, formatHeure, sortieEnCours } from "@/lib/mobile/time";
 import type { Session, SessionStatus } from "@/lib/mobile/types";
 
-/** Statuts considérés comme « présent sur site », dans l'ordre d'affichage. */
-const PRESENTS: SessionStatus[] = ["ouverte", "en_pause", "pause_timeout", "en_attente_cloture"];
+/**
+ * Statuts considérés comme « présent sur site », dans l'ordre d'affichage.
+ *
+ * Une sortie temporaire y figure : l'intérimaire est attendu sous 15 minutes,
+ * il reste donc comptabilisé — c'est précisément l'écran où le responsable doit
+ * voir qui est momentanément hors du site.
+ */
+const PRESENTS: SessionStatus[] = [
+  "ouverte",
+  "sortie_temporaire",
+  "en_pause",
+  "pause_timeout",
+  "en_attente_cloture",
+];
 
 /** Vue temps réel des personnes présentes — équivalent mobile de la liste sécurité. */
 export default function PresentsPage() {
@@ -99,6 +112,7 @@ function Compteur({
 function LignePresent({ session, now, depuis }: { session: Session; now: number; depuis: string }) {
   const profil = trouveInterimaire(session.interimaireId);
   const duree = calculeDuree(session, now);
+  const sortie = sortieEnCours(session);
 
   return (
     <Link
@@ -120,7 +134,13 @@ function LignePresent({ session, now, depuis }: { session: Session; now: number;
           {depuis} {formatHeure(session.debut)} · {profil?.fonction}
         </span>
         <span className="block mt-1.5">
-          <SessionStatusBadge statut={session.statut} />
+          {/* Le compte à rebours remplace la pastille de statut : pour une
+              sortie temporaire, le temps restant prime sur l'état. */}
+          {sortie ? (
+            <SortieCountdown sortie={sortie} now={now} />
+          ) : (
+            <SessionStatusBadge statut={session.statut} />
+          )}
         </span>
       </span>
 

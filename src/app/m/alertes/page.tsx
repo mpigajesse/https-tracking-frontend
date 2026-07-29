@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { BellOff, Clock, DoorClosed, PencilLine, TimerReset } from "lucide-react";
+import {
+  BadgeCheck, BellOff, Clock, DoorClosed, DoorOpen, LogOut, PencilLine, TimerReset,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import { TopBar } from "@/components/mobile/TopBar";
 import { ActionSheet } from "@/components/mobile/ActionSheet";
@@ -12,7 +16,7 @@ import { trouveInterimaire } from "@/lib/mobile/mock-data";
 import { useMobileStore } from "@/lib/mobile/store";
 import { useMobileT, type MobileT } from "@/lib/mobile/i18n";
 import { formatChrono, formatHeure, pauseEnCours, resteAvantEcheance } from "@/lib/mobile/time";
-import type { Session } from "@/lib/mobile/types";
+import type { Notification, Session } from "@/lib/mobile/types";
 import { cn } from "@/lib/utils";
 
 type Arbitrage = { session: Session; option: "A" | "B" | "C" } | null;
@@ -22,7 +26,10 @@ type Arbitrage = { session: Session; option: "A" | "B" | "C" } | null;
  * l'opérateur tranche entre les trois options prévues au BPMN.
  */
 export default function AlertesPage() {
-  const { compte, sessions, envoyer, now } = useMobileStore();
+  const {
+    compte, sessions, envoyer, now,
+    notifications, nonLues, marquerNotificationLue, marquerToutesLues,
+  } = useMobileStore();
   const { t } = useMobileT();
   const [arbitrage, setArbitrage] = useState<Arbitrage>(null);
 
@@ -32,7 +39,7 @@ export default function AlertesPage() {
 
   if (!compte) return null;
   const valideur = `${compte.prenom} ${compte.nom}`;
-  const total = timeouts.length + litiges.length;
+  const total = timeouts.length + litiges.length + nonLues;
 
   return (
     <>
@@ -55,6 +62,34 @@ export default function AlertesPage() {
 
       <div className="m-scroll px-4 pt-4 space-y-6">
         {total === 0 && aVerifier.length === 0 && <AucuneAlerte t={t} />}
+
+        {/* Les notifications passent en tête : c'est par elles que le technicien
+            apprend qu'un réceptionniste vient de scanner un QR. */}
+        {notifications.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between gap-2">
+              <EnTete titre={t("notif_title")} compte={notifications.length} couleur="text-blue-600" />
+              {nonLues > 0 && (
+                <button
+                  type="button"
+                  onClick={marquerToutesLues}
+                  className="shrink-0 text-xs font-medium text-[#CC0000] dark:text-[#FF6666]"
+                >
+                  {t("notif_markAll")}
+                </button>
+              )}
+            </div>
+            <div className="space-y-2.5">
+              {notifications.slice(0, 12).map((n) => (
+                <LigneNotification
+                  key={n.id}
+                  notification={n}
+                  onLue={() => marquerNotificationLue(n.id)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {timeouts.length > 0 && (
           <section>
@@ -115,6 +150,83 @@ export default function AlertesPage() {
 }
 
 /* ── Sous-composants ───────────────────────────────────────────────────── */
+
+/** Icône par nature de notification : la lecture se fait avant même le texte. */
+const ICONE_NOTIF: Record<Notification["kind"], LucideIcon> = {
+  ouverture_a_valider: DoorOpen,
+  cloture_a_valider: DoorClosed,
+  pause_timeout: TimerReset,
+  sortie_depassee: LogOut,
+  profil_a_valider: BadgeCheck,
+  profil_statue: BadgeCheck,
+};
+
+const TON_NOTIF: Record<Notification["kind"], string> = {
+  ouverture_a_valider: "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400",
+  cloture_a_valider: "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400",
+  pause_timeout: "bg-[#FFF0F0] dark:bg-[#2A0000] text-[#CC0000] dark:text-[#FF6666]",
+  sortie_depassee: "bg-[#FFF0F0] dark:bg-[#2A0000] text-[#CC0000] dark:text-[#FF6666]",
+  profil_a_valider: "bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400",
+  profil_statue: "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400",
+};
+
+/**
+ * Une notification renvoie vers la session concernée quand il y en a une :
+ * lire l'information et agir dessus doivent tenir en un seul geste.
+ */
+function LigneNotification({
+  notification,
+  onLue,
+}: {
+  notification: Notification;
+  onLue: () => void;
+}) {
+  const Icone = ICONE_NOTIF[notification.kind];
+  const contenu = (
+    <>
+      <span aria-hidden className={cn("shrink-0 w-10 h-10 grid place-items-center rounded-xl", TON_NOTIF[notification.kind])}>
+        <Icone className="w-5 h-5" strokeWidth={2} />
+      </span>
+      <span className="flex-1 min-w-0">
+        <span className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-900 dark:text-white truncate">
+            {notification.titre}
+          </span>
+          {!notification.lue && (
+            <span aria-label="non lue" className="shrink-0 w-2 h-2 rounded-full bg-[#CC0000]" />
+          )}
+        </span>
+        <span className="block mt-0.5 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+          {notification.detail}
+        </span>
+        <span className="m-num block mt-1 text-[11px] text-gray-400">
+          {formatHeure(notification.at)}
+        </span>
+      </span>
+    </>
+  );
+
+  const classes = cn(
+    "w-full flex items-start gap-3 p-4 rounded-xl border text-left transition-colors",
+    notification.lue
+      ? "border-gray-200 dark:border-[#2A2A2A] bg-white dark:bg-[#1C1C1C]"
+      : "border-[#CC0000]/30 bg-white dark:bg-[#1C1C1C]",
+  );
+
+  if (notification.sessionId) {
+    return (
+      <Link href={`/m/validations/${notification.sessionId}`} onClick={onLue} className={classes}>
+        {contenu}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onLue} className={classes}>
+      {contenu}
+    </button>
+  );
+}
 
 function EnTete({ titre, compte, couleur }: { titre: string; compte: number; couleur: string }) {
   return (
