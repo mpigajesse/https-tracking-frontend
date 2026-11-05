@@ -73,7 +73,9 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ role, badges = {} }: BottomNavProps) {
-  const pathname = usePathname();
+  // Sans la barre finale : l'export statique sert « /m/login/ », les
+  // comparaisons ci-dessous sont écrites sans elle.
+  const pathname = (usePathname() ?? "/").replace(/\/+$/, "") || "/";
   const { t } = useMobileT();
   const onglets = ONGLETS_PAR_ROLE[role];
   const estActif = (href: string) => (href === "/m" ? pathname === "/m" : pathname.startsWith(href));

@@ -59,7 +59,7 @@ function LigneHistorique({ session, now, t }: { session: Session; now: number; t
 
   return (
     <Link
-      href={`/m/historique/${session.id}`}
+      href={`/m/historique/detail?id=${encodeURIComponent(session.id)}`}
       className="block p-4 rounded-xl border border-gray-200 dark:border-[#2A2A2A] bg-white dark:bg-[#1C1C1C] hover:border-[#CC0000] transition-colors"
     >
       <div className="flex items-center justify-between gap-3">
