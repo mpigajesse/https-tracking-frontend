@@ -3,6 +3,9 @@
 Plateforme web de gestion et de pointage des travailleurs intérimaires de **Lear Corporation**.
 Application **Next.js 15 + React 19** installable en PWA, optimisée mobile, en français.
 
+**Démo en ligne : [https-tracking.onrender.com](https://https-tracking.onrender.com)**
+Prototype aux données intégrées, sans serveur : aucune donnée réelle n'est affichée ni enregistrée. La démo tourne sur une offre gratuite et met environ 50 secondes à se réveiller au premier accès.
+
 > Scan QR, suivi des présences en temps réel, gestion des sites, des intérimaires et des utilisateurs, alertes et workflow de validation — le tout dans une interface premium prête pour le terrain.
 
 ---
