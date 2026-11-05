@@ -1,3 +1,4 @@
+import { jourCourt, relatif } from './demo-dates';
 /**
  * Les cinq rôles de la plateforme, dans l'ordre du flux :
  * l'admin crée les sociétés d'intérim, la société crée ses profils, l'admin les
@@ -287,7 +288,7 @@ export const mockServices: Service[] = [
   { id: 'sv1', nom: 'Production', code: 'PROD', responsable: 'Fatima Alaoui', site: 'Site Casablanca', actif: true, createdAt: '2026-01-05' },
   { id: 'sv2', nom: 'Maintenance', code: 'MAINT', responsable: 'Youssef Ouali', site: 'Site Casablanca', actif: true, createdAt: '2026-01-05' },
   { id: 'sv3', nom: 'Logistique', code: 'LOG', responsable: 'Nadia Tazi', site: 'Site Casablanca', actif: true, createdAt: '2026-01-08' },
-  { id: 'sv4', nom: 'Qualité', code: 'QUAL', responsable: 'Samir Bennis', site: 'Site Rabat', actif: true, createdAt: '2026-02-11' },
+  { id: 'sv4', nom: 'Qualité', code: 'QUAL', responsable: 'Samir Bennis', site: 'Site Rabat', actif: true, createdAt: relatif('2026-02-11', '2026-02-18') },
   { id: 'sv5', nom: 'Travaux neufs', code: 'TN', responsable: 'Hicham Draoui', site: 'Site Casablanca', actif: false, createdAt: '2026-03-02' },
 ];
 
@@ -296,7 +297,7 @@ export const mockDemandeurs: Demandeur[] = [
   { id: 'dm2', prenom: 'Mehdi', nom: 'Sabri', email: 'm.sabri@lear.ma', telephone: '06 62 31 41 51', serviceId: 'sv1', serviceNom: 'Production', actif: true, createdAt: '2026-01-06' },
   { id: 'dm3', prenom: 'Youssef', nom: 'Ouali', email: 'y.ouali@lear.ma', telephone: '06 63 42 52 62', serviceId: 'sv2', serviceNom: 'Maintenance', actif: true, createdAt: '2026-01-07' },
   { id: 'dm4', prenom: 'Nadia', nom: 'Tazi', email: 'n.tazi@lear.ma', telephone: '06 64 53 63 73', serviceId: 'sv3', serviceNom: 'Logistique', actif: true, createdAt: '2026-01-09' },
-  { id: 'dm5', prenom: 'Samir', nom: 'Bennis', email: 's.bennis@lear.ma', telephone: '06 65 64 74 84', serviceId: 'sv4', serviceNom: 'Qualité', actif: true, createdAt: '2026-02-12' },
+  { id: 'dm5', prenom: 'Samir', nom: 'Bennis', email: 's.bennis@lear.ma', telephone: '06 65 64 74 84', serviceId: 'sv4', serviceNom: 'Qualité', actif: true, createdAt: relatif('2026-02-12', '2026-02-18') },
   { id: 'dm6', prenom: 'Hicham', nom: 'Draoui', email: 'h.draoui@lear.ma', serviceId: 'sv5', serviceNom: 'Travaux neufs', actif: false, createdAt: '2026-03-03' },
 ];
 
@@ -305,8 +306,8 @@ export const mockDemandeurs: Demandeur[] = [
  * pour rendre visible le cas « aucun technicien sur ce site ».
  */
 export const mockDisponibilites: DisponibiliteTechnicien[] = [
-  { id: 'dp1', technicienId: 'u2', technicienNom: 'Fatima Alaoui', site: 'Site Casablanca', depuis: '2026-07-28T06:00:00' },
-  { id: 'dp0', technicienId: 'u5', technicienNom: 'Youssef Ouali', site: 'Site Tanger', depuis: '2026-07-27T06:00:00', jusqu: '2026-07-27T18:00:00', motifFin: 'Fin de service' },
+  { id: 'dp1', technicienId: 'u2', technicienNom: 'Fatima Alaoui', site: 'Site Casablanca', depuis: relatif('2026-07-28T06:00:00', '2026-07-28') },
+  { id: 'dp0', technicienId: 'u5', technicienNom: 'Youssef Ouali', site: 'Site Tanger', depuis: relatif('2026-07-27T06:00:00', '2026-07-28'), jusqu: relatif('2026-07-27T18:00:00', '2026-07-28'), motifFin: 'Fin de service' },
 ];
 
 export function trouveService(id: string): Service | undefined {
@@ -352,14 +353,14 @@ export const mockInterimaires: Interimaire[] = [
   { id: 'i6', nom: 'Cherkaoui', prenom: 'Zineb', cin: 'KL123456', email: 'zcherkaoui@gmail.com', telephone: '06 44 55 66 77', societeId: 'so1', agence: 'TempoPro', fonction: 'Opérateur', typeActivite: 'production', site: 'Site Casablanca', dateDebut: '2026-04-01', dateFin: '2026-10-01', statut: 'inactif', qrStatus: 'revoque', totalHeures: 45, statutProfil: 'suspendu', documents: DOCS_COMPLETS, soumisLe: '2026-04-02', statueLe: '2026-07-15', statuePar: 'Karim Benali', motifRefus: "Attestation d'assurance expirée le 01/07/2026" },
 
   /* — Dossiers en cours d'instruction : alimentent l'écran de validation admin — */
-  { id: 'i7', nom: 'Naciri', prenom: 'Youssef', cin: 'MN654321', email: 'ynaciri@gmail.com', telephone: '06 21 43 65 87', societeId: 'so1', agence: 'TempoPro', fonction: 'Opérateur', typeActivite: 'production', site: 'Site Casablanca', dateDebut: '2026-08-01', dateFin: '2026-11-30', statut: 'inactif', qrStatus: 'revoque', totalHeures: 0, statutProfil: 'en_attente_validation', documents: DOCS_COMPLETS, soumisLe: '2026-07-26' },
-  { id: 'i8', nom: 'Squalli', prenom: 'Nadia', cin: 'OP112233', email: 'nsqualli@gmail.com', telephone: '06 33 22 11 00', societeId: 'so2', agence: 'InterWork', fonction: 'Magasinier', typeActivite: 'logistique', site: 'Site Rabat', dateDebut: '2026-08-01', dateFin: '2026-12-15', statut: 'inactif', qrStatus: 'revoque', totalHeures: 0, statutProfil: 'en_attente_validation', documents: DOCS_COMPLETS, soumisLe: '2026-07-27' },
+  { id: 'i7', nom: 'Naciri', prenom: 'Youssef', cin: 'MN654321', email: 'ynaciri@gmail.com', telephone: '06 21 43 65 87', societeId: 'so1', agence: 'TempoPro', fonction: 'Opérateur', typeActivite: 'production', site: 'Site Casablanca', dateDebut: '2026-08-01', dateFin: '2026-11-30', statut: 'inactif', qrStatus: 'revoque', totalHeures: 0, statutProfil: 'en_attente_validation', documents: DOCS_COMPLETS, soumisLe: relatif('2026-07-26', '2026-07-28') },
+  { id: 'i8', nom: 'Squalli', prenom: 'Nadia', cin: 'OP112233', email: 'nsqualli@gmail.com', telephone: '06 33 22 11 00', societeId: 'so2', agence: 'InterWork', fonction: 'Magasinier', typeActivite: 'logistique', site: 'Site Rabat', dateDebut: '2026-08-01', dateFin: '2026-12-15', statut: 'inactif', qrStatus: 'revoque', totalHeures: 0, statutProfil: 'en_attente_validation', documents: DOCS_COMPLETS, soumisLe: relatif('2026-07-27', '2026-07-28') },
 
   /* — Brouillon incomplet : la société ne peut pas encore le soumettre — */
   { id: 'i9', nom: 'Tahiri', prenom: 'Anas', cin: 'QR445566', email: 'atahiri@gmail.com', telephone: '06 77 88 99 00', societeId: 'so1', agence: 'TempoPro', fonction: 'Conducteur', typeActivite: 'logistique', site: 'Site Casablanca', dateDebut: '2026-09-01', dateFin: '2027-01-31', statut: 'inactif', qrStatus: 'revoque', totalHeures: 0, statutProfil: 'brouillon', documents: ['cin', 'contrat'] },
 
   /* — Dossier refusé : la société doit le corriger — */
-  { id: 'i10', nom: 'Bennani', prenom: 'Salma', cin: 'ST778899', email: 'sbennani@gmail.com', telephone: '06 10 20 30 40', societeId: 'so1', agence: 'TempoPro', fonction: 'Opérateur', typeActivite: 'production', site: 'Site Casablanca', dateDebut: '2026-08-15', dateFin: '2026-10-31', statut: 'inactif', qrStatus: 'revoque', totalHeures: 0, statutProfil: 'refuse', documents: DOCS_COMPLETS, soumisLe: '2026-07-20', statueLe: '2026-07-21', statuePar: 'Karim Benali', motifRefus: "Attestation d'assurance manquante" },
+  { id: 'i10', nom: 'Bennani', prenom: 'Salma', cin: 'ST778899', email: 'sbennani@gmail.com', telephone: '06 10 20 30 40', societeId: 'so1', agence: 'TempoPro', fonction: 'Opérateur', typeActivite: 'production', site: 'Site Casablanca', dateDebut: '2026-08-15', dateFin: '2026-10-31', statut: 'inactif', qrStatus: 'revoque', totalHeures: 0, statutProfil: 'refuse', documents: DOCS_COMPLETS, soumisLe: relatif('2026-07-20', '2026-07-28'), statueLe: relatif('2026-07-21', '2026-07-28'), statuePar: 'Karim Benali', motifRefus: "Attestation d'assurance manquante" },
 ];
 
 /** Les profils d'une société donnée. */
@@ -372,34 +373,34 @@ export function trouveSociete(id: string): Societe | undefined {
 }
 
 export const mockSessions: Session[] = [
-  { id: 's0', interimaire: 'i4', interimaireNom: 'Leila Berrada', site: 'Site Fès', fonction: 'Chef d\'équipe', typeActivite: 'production', heureDebut: '2026-02-18T07:45:00', statut: 'sortie_temporaire', createdAt: '2026-02-18T07:45:00', validatedBy: 'Youssef Ouali', motifSortie: 'chantier', sortieDebut: '2026-02-18T10:12:00', sortieEcheance: '2026-02-18T10:27:00', sortiePrecision: 'Chantier Nord — bâtiment C' },
-  { id: 's1', interimaire: 'i1', interimaireNom: 'Mohamed El Amrani', site: 'Site Casablanca', fonction: 'Opérateur', typeActivite: 'production', heureDebut: '2026-02-18T08:00:00', statut: 'en_attente_fermeture', createdAt: '2026-02-18T08:00:00', validatedBy: 'Fatima Alaoui', motifSortie: 'fin_journee' },
-  { id: 's2', interimaire: 'i2', interimaireNom: 'Aicha Bakkali', site: 'Site Rabat', fonction: 'Technicien', typeActivite: 'maintenance', heureDebut: '2026-02-18T07:30:00', statut: 'en_attente_fermeture', createdAt: '2026-02-18T07:30:00' },
-  { id: 's3', interimaire: 'i5', interimaireNom: 'Abdelaziz Filali', site: 'Site Marrakech', fonction: 'Conducteur', typeActivite: 'logistique', heureDebut: '2026-02-18T06:00:00', statut: 'en_attente_ouverture', createdAt: '2026-02-18T06:00:00' },
-  { id: 's4', interimaire: 'i4', interimaireNom: 'Leila Berrada', site: 'Site Fès', fonction: 'Chef d\'équipe', typeActivite: 'production', heureDebut: '2026-02-17T08:00:00', heureFin: '2026-02-17T17:00:00', duree: 9, statut: 'fermee', createdAt: '2026-02-17T08:00:00' },
-  { id: 's5', interimaire: 'i3', interimaireNom: 'Omar Qasimi', site: 'Site Tanger', fonction: 'Magasinier', typeActivite: 'logistique', heureDebut: '2026-02-15T08:00:00', statut: 'en_litige', createdAt: '2026-02-15T08:00:00' },
-  { id: 's6', interimaire: 'i1', interimaireNom: 'Mohamed El Amrani', site: 'Site Casablanca', fonction: 'Opérateur', typeActivite: 'production', heureDebut: '2026-02-17T08:00:00', heureFin: '2026-02-17T16:30:00', duree: 8.5, statut: 'fermee', createdAt: '2026-02-17T08:00:00', validatedBy: 'Fatima Alaoui' },
+  { id: 's0', interimaire: 'i4', interimaireNom: 'Leila Berrada', site: 'Site Fès', fonction: 'Chef d\'équipe', typeActivite: 'production', heureDebut: relatif('2026-02-18T07:45:00', '2026-02-18'), statut: 'sortie_temporaire', createdAt: relatif('2026-02-18T07:45:00', '2026-02-18'), validatedBy: 'Youssef Ouali', motifSortie: 'chantier', sortieDebut: relatif('2026-02-18T10:12:00', '2026-02-18'), sortieEcheance: relatif('2026-02-18T10:27:00', '2026-02-18'), sortiePrecision: 'Chantier Nord — bâtiment C' },
+  { id: 's1', interimaire: 'i1', interimaireNom: 'Mohamed El Amrani', site: 'Site Casablanca', fonction: 'Opérateur', typeActivite: 'production', heureDebut: relatif('2026-02-18T08:00:00', '2026-02-18'), statut: 'en_attente_fermeture', createdAt: relatif('2026-02-18T08:00:00', '2026-02-18'), validatedBy: 'Fatima Alaoui', motifSortie: 'fin_journee' },
+  { id: 's2', interimaire: 'i2', interimaireNom: 'Aicha Bakkali', site: 'Site Rabat', fonction: 'Technicien', typeActivite: 'maintenance', heureDebut: relatif('2026-02-18T07:30:00', '2026-02-18'), statut: 'en_attente_fermeture', createdAt: relatif('2026-02-18T07:30:00', '2026-02-18') },
+  { id: 's3', interimaire: 'i5', interimaireNom: 'Abdelaziz Filali', site: 'Site Marrakech', fonction: 'Conducteur', typeActivite: 'logistique', heureDebut: relatif('2026-02-18T06:00:00', '2026-02-18'), statut: 'en_attente_ouverture', createdAt: relatif('2026-02-18T06:00:00', '2026-02-18') },
+  { id: 's4', interimaire: 'i4', interimaireNom: 'Leila Berrada', site: 'Site Fès', fonction: 'Chef d\'équipe', typeActivite: 'production', heureDebut: relatif('2026-02-17T08:00:00', '2026-02-18'), heureFin: relatif('2026-02-17T17:00:00', '2026-02-18'), duree: 9, statut: 'fermee', createdAt: relatif('2026-02-17T08:00:00', '2026-02-18') },
+  { id: 's5', interimaire: 'i3', interimaireNom: 'Omar Qasimi', site: 'Site Tanger', fonction: 'Magasinier', typeActivite: 'logistique', heureDebut: relatif('2026-02-15T08:00:00', '2026-02-18'), statut: 'en_litige', createdAt: relatif('2026-02-15T08:00:00', '2026-02-18') },
+  { id: 's6', interimaire: 'i1', interimaireNom: 'Mohamed El Amrani', site: 'Site Casablanca', fonction: 'Opérateur', typeActivite: 'production', heureDebut: relatif('2026-02-17T08:00:00', '2026-02-18'), heureFin: relatif('2026-02-17T16:30:00', '2026-02-18'), duree: 8.5, statut: 'fermee', createdAt: relatif('2026-02-17T08:00:00', '2026-02-18'), validatedBy: 'Fatima Alaoui' },
   // Sortie chantier non honorée : le système a fermé la session au bout de 15 min.
-  { id: 's7', interimaire: 'i2', interimaireNom: 'Aicha Bakkali', site: 'Site Rabat', fonction: 'Technicien', typeActivite: 'maintenance', heureDebut: '2026-02-17T07:30:00', heureFin: '2026-02-17T13:05:00', duree: 5.58, statut: 'cloturee_sortie_depassee', createdAt: '2026-02-17T07:30:00', motifSortie: 'course', sortieDebut: '2026-02-17T13:05:00', sortieEcheance: '2026-02-17T13:20:00' },
+  { id: 's7', interimaire: 'i2', interimaireNom: 'Aicha Bakkali', site: 'Site Rabat', fonction: 'Technicien', typeActivite: 'maintenance', heureDebut: relatif('2026-02-17T07:30:00', '2026-02-18'), heureFin: relatif('2026-02-17T13:05:00', '2026-02-18'), duree: 5.58, statut: 'cloturee_sortie_depassee', createdAt: relatif('2026-02-17T07:30:00', '2026-02-18'), motifSortie: 'course', sortieDebut: relatif('2026-02-17T13:05:00', '2026-02-18'), sortieEcheance: relatif('2026-02-17T13:20:00', '2026-02-18') },
 ];
 
 export const mockAlerts: Alert[] = [
-  { id: 'a1', type: 'non_cloturee', message: 'Session non clôturée depuis plus de 12h', interimaireNom: 'Omar Qasimi', site: 'Site Tanger', createdAt: '2026-02-17T20:00:00', severity: 'high' },
-  { id: 'a2', type: 'depassement_48h', message: 'Dépassement 48h hebdomadaire détecté', interimaireNom: 'Mohamed El Amrani', site: 'Site Casablanca', createdAt: '2026-02-17T18:00:00', severity: 'medium' },
-  { id: 'a3', type: 'en_litige', message: 'Session en litige - validation requise', interimaireNom: 'Omar Qasimi', site: 'Site Tanger', createdAt: '2026-02-15T10:00:00', severity: 'high' },
-  { id: 'a4', type: 'non_cloturee', message: 'Session ouverte sans validation du technicien', interimaireNom: 'Zineb Cherkaoui', site: 'Site Casablanca', createdAt: '2026-02-18T09:00:00', severity: 'medium' },
-  { id: 'a5', type: 'sortie_depassee', message: 'Sortie course non honorée sous 15 min — session fermée automatiquement', interimaireNom: 'Aicha Bakkali', site: 'Site Rabat', createdAt: '2026-02-17T13:20:00', severity: 'high' },
-  { id: 'a6', type: 'profil_a_valider', message: 'Deux dossiers intérimaires en attente de validation', interimaireNom: 'Youssef Naciri', site: 'Site Casablanca', createdAt: '2026-07-27T09:15:00', severity: 'medium' },
+  { id: 'a1', type: 'non_cloturee', message: 'Session non clôturée depuis plus de 12h', interimaireNom: 'Omar Qasimi', site: 'Site Tanger', createdAt: relatif('2026-02-17T20:00:00', '2026-02-18'), severity: 'high' },
+  { id: 'a2', type: 'depassement_48h', message: 'Dépassement 48h hebdomadaire détecté', interimaireNom: 'Mohamed El Amrani', site: 'Site Casablanca', createdAt: relatif('2026-02-17T18:00:00', '2026-02-18'), severity: 'medium' },
+  { id: 'a3', type: 'en_litige', message: 'Session en litige - validation requise', interimaireNom: 'Omar Qasimi', site: 'Site Tanger', createdAt: relatif('2026-02-15T10:00:00', '2026-02-18'), severity: 'high' },
+  { id: 'a4', type: 'non_cloturee', message: 'Session ouverte sans validation du technicien', interimaireNom: 'Zineb Cherkaoui', site: 'Site Casablanca', createdAt: relatif('2026-02-18T09:00:00', '2026-02-18'), severity: 'medium' },
+  { id: 'a5', type: 'sortie_depassee', message: 'Sortie course non honorée sous 15 min — session fermée automatiquement', interimaireNom: 'Aicha Bakkali', site: 'Site Rabat', createdAt: relatif('2026-02-17T13:20:00', '2026-02-18'), severity: 'high' },
+  { id: 'a6', type: 'profil_a_valider', message: 'Deux dossiers intérimaires en attente de validation', interimaireNom: 'Youssef Naciri', site: 'Site Casablanca', createdAt: relatif('2026-07-27T09:15:00', '2026-07-28'), severity: 'medium' },
 ];
 
 export const chartDataHeures = [
-  { date: '12 Fév', heures: 245, cout: 3675 },
-  { date: '13 Fév', heures: 312, cout: 4680 },
-  { date: '14 Fév', heures: 289, cout: 4335 },
-  { date: '15 Fév', heures: 198, cout: 2970 },
-  { date: '16 Fév', heures: 156, cout: 2340 },
-  { date: '17 Fév', heures: 340, cout: 5100 },
-  { date: '18 Fév', heures: 287, cout: 4305 },
+  { date: jourCourt(6), heures: 245, cout: 3675 },
+  { date: jourCourt(5), heures: 312, cout: 4680 },
+  { date: jourCourt(4), heures: 289, cout: 4335 },
+  { date: jourCourt(3), heures: 198, cout: 2970 },
+  { date: jourCourt(2), heures: 156, cout: 2340 },
+  { date: jourCourt(1), heures: 340, cout: 5100 },
+  { date: jourCourt(0), heures: 287, cout: 4305 },
 ];
 
 export const chartDataSites = [

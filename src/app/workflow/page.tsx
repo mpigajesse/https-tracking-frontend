@@ -665,7 +665,8 @@ export default function WorkflowPage() {
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shadow">
               <Image src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Lear_Corporation_logo.svg/960px-Lear_Corporation_logo.svg.png"
-                alt="Lear" width={22} height={14} className="object-contain" unoptimized />
+                alt="Lear" width={22} height={14} className="object-contain" unoptimized
+                onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} />
             </div>
             <span className="text-white font-bold text-sm hidden sm:inline" style={{ fontFamily: 'var(--font-syne)' }}>Lear Corporation</span>
             <span className="text-[#CC0000] text-xs hidden md:inline">— Diagramme Workflow</span>

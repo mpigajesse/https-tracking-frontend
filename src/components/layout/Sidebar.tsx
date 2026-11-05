@@ -256,6 +256,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
               height={32}
               className="object-contain"
               unoptimized
+                onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
             />
           </div>
           <AnimatePresence>
