@@ -259,6 +259,7 @@ function LoginForm() {
                 width={40} height={40}
                 className="object-contain"
                 unoptimized
+                onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
               />
             </div>
             <div>
@@ -370,6 +371,7 @@ function LoginForm() {
                 width={32} height={32}
                 className="object-contain"
                 unoptimized
+                onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
               />
             </div>
             <div>
