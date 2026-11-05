@@ -136,11 +136,13 @@ export default function DashboardPage() {
               <LineChart data={chartDataHeures}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" strokeOpacity={0.5} />
                 <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                {/* Deux axes : les heures (~300/j) écrasées sur l'échelle des coûts (~5 000 MAD/j) formaient une ligne plate. */}
+                <YAxis yAxisId="heures" tick={{ fontSize: 12, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="cout" orientation="right" tick={{ fontSize: 12, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
                 <Tooltip {...tooltipStyle} />
                 <Legend />
-                <Line type="monotone" dataKey="heures" stroke={LEAR_RED} strokeWidth={2.5} dot={{ fill: LEAR_RED, r: 4 }} name={t('dash_chart_hours_legend')} />
-                <Line type="monotone" dataKey="cout" stroke={CHART_GREEN} strokeWidth={2.5} dot={{ fill: CHART_GREEN, r: 4 }} name={t('dash_chart_cost_legend')} />
+                <Line yAxisId="heures" type="monotone" dataKey="heures" stroke={LEAR_RED} strokeWidth={2.5} dot={{ fill: LEAR_RED, r: 4 }} name={t('dash_chart_hours_legend')} />
+                <Line yAxisId="cout" type="monotone" dataKey="cout" stroke={CHART_GREEN} strokeWidth={2.5} dot={{ fill: CHART_GREEN, r: 4 }} name={t('dash_chart_cost_legend')} />
               </LineChart>
             </ResponsiveContainer>
           </div>
