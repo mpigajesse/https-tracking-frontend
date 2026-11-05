@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Check, ShieldAlert, ShieldCheck, TriangleAlert, UserSquare2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -18,8 +18,19 @@ import { calculeDuree, formatDuree, formatHeure } from "@/lib/mobile/time";
 import { nomDemandeur, type Demandeur } from "@/lib/mobile/types";
 import { cn } from "@/lib/utils";
 
+// Page à paramètre de requête (?id=…) et non plus à segment [id] : le site
+// est publié en export statique (voir next.config.ts), et les identifiants
+// — sessions créées au scan, intérimaires ajoutés — n'existent qu'au runtime.
 export default function ValidationDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  return (
+    <Suspense fallback={null}>
+      <ValidationDetailPageContenu />
+    </Suspense>
+  );
+}
+
+function ValidationDetailPageContenu() {
+  const id = useSearchParams().get('id') ?? '';
   const router = useRouter();
   const { compte, sessions, envoyer, now, demandeursDisponibles } = useMobileStore();
   const { t } = useMobileT();

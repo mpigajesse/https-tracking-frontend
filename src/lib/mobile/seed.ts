@@ -157,5 +157,9 @@ export function construireSeed(now: number): Session[] {
   );
   sessions.push(avantVeille);
 
-  return sessions;
+  // Identifiants stables : nouvelId() les dérive de l'heure du chargement, si
+  // bien qu'une page de détail rechargée (/m/historique/detail?id=…) ne
+  // retrouvait plus « sa » session. Les sessions créées ensuite au scan
+  // gardent l'identifiant de nouvelId().
+  return sessions.map((session, index) => ({ ...session, id: `S-demo-${index + 1}` }));
 }

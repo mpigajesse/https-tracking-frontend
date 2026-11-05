@@ -139,7 +139,7 @@ function LigneSession({
 
   return (
     <Link
-      href={`/m/validations/${session.id}`}
+      href={`/m/validations/detail?id=${encodeURIComponent(session.id)}`}
       className={cn(
         "flex items-center gap-3 p-4 rounded-xl border bg-white dark:bg-[#1C1C1C] transition-colors hover:border-[#CC0000]",
         urgent ? "border-red-300 dark:border-red-900" : "border-gray-200 dark:border-[#2A2A2A]",

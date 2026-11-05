@@ -251,7 +251,7 @@ export default function InterimairesPage() {
       key: 'actions', label: t('inter_col_actions'),
       render: (i: Interimaire) => (
         <div className="flex items-center gap-1">
-          <button onClick={e => { e.stopPropagation(); router.push(`/interimaires/${i.id}`); }} className="p-1.5 rounded-lg text-[#CC0000] hover:bg-[#FFF0F0] dark:hover:bg-[#2A0000] transition-colors" title="QR">
+          <button onClick={e => { e.stopPropagation(); router.push(`/interimaires/fiche?id=${encodeURIComponent(i.id)}`); }} className="p-1.5 rounded-lg text-[#CC0000] hover:bg-[#FFF0F0] dark:hover:bg-[#2A0000] transition-colors" title="QR">
             <QrCode className="w-3.5 h-3.5" />
           </button>
           <button
@@ -361,7 +361,7 @@ export default function InterimairesPage() {
                 {AGENCES.map(a => <option key={a}>{a}</option>)}
               </select>
             </div>
-            <DataTable columns={columns} data={filtered} onRowClick={i => router.push(`/interimaires/${i.id}`)} />
+            <DataTable columns={columns} data={filtered} onRowClick={i => router.push(`/interimaires/fiche?id=${encodeURIComponent(i.id)}`)} />
             <div className="p-4 border-t border-gray-100 dark:border-[#2A2A2A] text-sm text-gray-500 dark:text-gray-400">
               {filtered.length} {t('inter_results')}
             </div>

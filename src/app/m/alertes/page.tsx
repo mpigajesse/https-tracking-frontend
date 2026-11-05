@@ -215,7 +215,7 @@ function LigneNotification({
 
   if (notification.sessionId) {
     return (
-      <Link href={`/m/validations/${notification.sessionId}`} onClick={onLue} className={classes}>
+      <Link href={`/m/validations/detail?id=${encodeURIComponent(notification.sessionId)}`} onClick={onLue} className={classes}>
         {contenu}
       </Link>
     );

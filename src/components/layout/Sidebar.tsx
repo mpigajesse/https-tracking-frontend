@@ -226,7 +226,9 @@ interface SidebarProps {
 
 export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const pathname = usePathname();
+  // Sans la barre finale : l'export statique sert « /m/login/ », les
+  // comparaisons ci-dessous sont écrites sans elle.
+  const pathname = (usePathname() ?? "/").replace(/\/+$/, "") || "/";
   const router = useRouter();
   const { user, logout } = useAuth();
   const { t } = useI18n();

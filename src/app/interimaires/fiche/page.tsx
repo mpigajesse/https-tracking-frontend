@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import AppLayout from '@/components/layout/AppLayout';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { mockInterimaires, mockSessions, QRStatus } from '@/lib/data';
@@ -20,10 +20,20 @@ const qrLabels: Record<QRStatus, string> = {
   revoque: 'Révoqué',
 };
 
+// Page à paramètre de requête (?id=…) et non plus à segment [id] : le site
+// est publié en export statique (voir next.config.ts), et les identifiants
+// — sessions créées au scan, intérimaires ajoutés — n'existent qu'au runtime.
 export default function DetailInterimairePage() {
-  const params = useParams();
+  return (
+    <Suspense fallback={null}>
+      <DetailInterimairePageContenu />
+    </Suspense>
+  );
+}
+
+function DetailInterimairePageContenu() {
   const router = useRouter();
-  const id = params.id as string;
+  const id = useSearchParams().get('id') ?? '';
   const interimaire = mockInterimaires.find(i => i.id === id);
 
   const [qrStatus, setQrStatus] = useState<QRStatus>(interimaire?.qrStatus || 'actif');

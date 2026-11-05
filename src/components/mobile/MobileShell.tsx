@@ -10,7 +10,9 @@ const ROUTES_PUBLIQUES = ["/m/login"];
 
 export function MobileShell({ children }: { children: React.ReactNode }) {
   const { pret, compte, sessions, nonLues } = useMobileStore();
-  const pathname = usePathname();
+  // Sans la barre finale : l'export statique sert « /m/login/ », les
+  // comparaisons ci-dessous sont écrites sans elle.
+  const pathname = (usePathname() ?? "/").replace(/\/+$/, "") || "/";
   const router = useRouter();
 
   const publique = ROUTES_PUBLIQUES.includes(pathname);

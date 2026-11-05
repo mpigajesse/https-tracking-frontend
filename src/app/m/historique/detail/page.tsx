@@ -1,6 +1,7 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Coffee } from "lucide-react";
 import { TopBar } from "@/components/mobile/TopBar";
 import { AuditTimeline } from "@/components/mobile/AuditTimeline";
@@ -18,8 +19,19 @@ import {
 } from "@/lib/mobile/time";
 
 /** Détail d'une session : décomposition du temps, pauses et journal complet. */
+// Page à paramètre de requête (?id=…) et non plus à segment [id] : le site
+// est publié en export statique (voir next.config.ts), et les identifiants
+// — sessions créées au scan, intérimaires ajoutés — n'existent qu'au runtime.
 export default function SessionDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  return (
+    <Suspense fallback={null}>
+      <SessionDetailPageContenu />
+    </Suspense>
+  );
+}
+
+function SessionDetailPageContenu() {
+  const id = useSearchParams().get('id') ?? '';
   const { sessions, now } = useMobileStore();
   const { t } = useMobileT();
   const session = sessions.find((s) => s.id === id);
